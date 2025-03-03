@@ -1,0 +1,23 @@
+# Build results
+bin/
+obj/
+out/
+
+# Configuration files
+appsettings.json
+appsettings.*.json
+
+# .NET publish directories
+publish/
+
+# NuGet package directory
+.nuget/
+
+# Test results
+TestResults/
+*.testresults
+*.coverage
+*.coveragexml
+
+# Other generated files
+.vs/
