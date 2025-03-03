@@ -1,0 +1,39 @@
+name: CI Pipeline for SRMS App
+
+# Trigger the workflow on push or pull request events
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use GitHub-hosted runner (Ubuntu)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  # Checkout the repo code
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3  # Setup .NET SDK (use v3 if you are using .NET 7 or newer)
+        with:
+          dotnet-version: '9.0'  # Use the version of .NET you are working with, e.g., 6.0, 7.0
+
+      - name: Restore dependencies
+        run: dotnet restore  # Restore NuGet dependencies
+
+      - name: Build the project
+        run: dotnet build --configuration Release  # Build the project
+
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal  # Run tests without rebuilding the solution
+
+      - name: Publish Test Results
+        uses: actions/upload-artifact@v4
+        with:
+            name: test-results
+            path: $(System.DefaultWorkingDirectory)/TestResults/*.xml
+        
