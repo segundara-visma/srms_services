@@ -1,27 +1,65 @@
-﻿using Xunit;
-using Moq;
+﻿using System;
+using System.Threading.Tasks;
+using UserService.Application.Interfaces;
 using UserService.Application.Services;
 using UserService.Domain.Entities;
-using UserService.Application.Interfaces;
-using System.Threading.Tasks;
+using Moq;
+using Xunit;
+using FluentAssertions;
+using BCrypt.Net;  // Add this to handle password hashing
+using Microsoft.AspNetCore.Http;  // For mocking cookies
+using Xunit.Abstractions;
 
-public class UserServiceTests
+namespace UserService.UnitTests
 {
-    [Fact]
-    public async Task RegisterUser_ShouldCreateUser_WhenDataIsValid()
+    public class UserServiceTests
     {
-        // Arrange
-        var userRepositoryMock = new Mock<IUserRepository>();
-        var userService = new UserService(userRepositoryMock.Object);
+        private readonly Mock<IUserRepository> _userRepositoryMock;
+        private readonly IUserService _userService;
+        private readonly ITestOutputHelper _output;  // Add this line to capture output
 
-        var user = new User("test@example.com", "hashedpassword");
-        userRepositoryMock.Setup(repo => repo.CreateAsync(user)).ReturnsAsync(user);
+        // Constructor to initialize the mocks
+        public UserServiceTests(ITestOutputHelper output)
+        {
+            _output = output;  // Assign to the private field
+            _userRepositoryMock = new Mock<IUserRepository>();
 
-        // Act
-        var result = await userService.RegisterUser(user);
+            _userService = new UserServices(_userRepositoryMock.Object);
+        }
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("test@example.com", result.Email);
+        // Test case for successful user registration
+        [Fact]
+        public async Task RegisterUser_Should_Create_New_User_When_Valid()
+        {
+            // Arrange
+            var rawPassword = "password123";  // raw password input by the user
+            var roleName = "Student";  // the user's role
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(rawPassword);  // Hash the password for storage
+            var newUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = "test@example.com",
+                PasswordHash = hashedPassword,
+                Firstname = "First",
+                Lastname = "Last",
+                // Role = "Student" 
+            };
+
+            // Mock behavior: GetByEmailAsync returns null, indicating no user exists with this email
+            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(newUser.Email)).ReturnsAsync((User?)null);  // Ensure null is properly casted as User?
+
+            // Mock behavior: AddAsync completes without doing anything
+            _userRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<User>())).Returns(Task.CompletedTask);
+
+            // Mock the role fetching (assuming you have a method GetRoleByNameAsync)
+            var mockRole = new Role { Id = 3, Name = "Student" };  // Mock the role object
+            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync(mockRole);  // Mock role retrieval
+
+            // Act
+            await _userService.RegisterUser(newUser, rawPassword, roleName);  // Pass the user object and the rawPassword
+
+            // Assert
+            _userRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<User>()), Times.Once);
+        }
     }
 }
