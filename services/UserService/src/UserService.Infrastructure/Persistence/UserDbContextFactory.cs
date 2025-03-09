@@ -13,7 +13,7 @@ public class UserDbContextFactory : IDesignTimeDbContextFactory<UserDbContext>
 
         // Read the connection string from appsettings.json or from environment variables
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "UserService.Api"))
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "UserService.API"))
             .AddJsonFile("appsettings.json")
             .Build();
 
