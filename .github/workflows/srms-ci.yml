@@ -42,52 +42,33 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d  # Start services in detached mode
 
-      - name: Wait for services to be ready
+      - name: Wait for services to be ready (using Docker health checks)
         run: |
-          # Set maximum retry count and timeout for pg_isready
-          MAX_RETRIES=30
-          RETRY_COUNT=0
-          WAIT_INTERVAL=2
+          # Wait for the services to be healthy based on Docker health checks
+          echo "Waiting for services to be healthy..."
 
-          # Wait for PostgreSQL (authdb) to be ready
-          until pg_isready -h authdb -U postgres || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-            echo "waiting for authdb ($RETRY_COUNT/$MAX_RETRIES)..."
-            RETRY_COUNT=$((RETRY_COUNT+1))
-            sleep $WAIT_INTERVAL
-          done
-
-          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            echo "AuthDB is not ready after $MAX_RETRIES retries, exiting."
+          # Check for authdb health
+          docker-compose wait authdb
+          if [ $? -ne 0 ]; then
+            echo "AuthDB is not healthy, exiting."
             exit 1
           fi
 
-          RETRY_COUNT=0
-          # Wait for PostgreSQL (userdb) to be ready
-          until pg_isready -h userdb -U postgres || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-            echo "waiting for userdb ($RETRY_COUNT/$MAX_RETRIES)..."
-            RETRY_COUNT=$((RETRY_COUNT+1))
-            sleep $WAIT_INTERVAL
-          done
-
-          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            echo "UserDB is not ready after $MAX_RETRIES retries, exiting."
+          # Check for userdb health
+          docker-compose wait userdb
+          if [ $? -ne 0 ]; then
+            echo "UserDB is not healthy, exiting."
             exit 1
           fi
 
-          RETRY_COUNT=0
-          # Wait for Redis to be ready
-          until redis-cli -h redis ping || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-            echo "waiting for redis ($RETRY_COUNT/$MAX_RETRIES)..."
-            RETRY_COUNT=$((RETRY_COUNT+1))
-            sleep $WAIT_INTERVAL
-          done
-
-          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            echo "Redis is not ready after $MAX_RETRIES retries, exiting."
+          # Check for redis health
+          docker-compose wait redis
+          if [ $? -ne 0 ]; then
+            echo "Redis is not healthy, exiting."
             exit 1
           fi
 
-          echo "All services are ready!"
+          echo "All services are healthy and ready!"
 
       - name: Restore .NET dependencies
         run: dotnet restore  # Restore NuGet dependencies
