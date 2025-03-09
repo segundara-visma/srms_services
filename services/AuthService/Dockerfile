@@ -1,38 +1,24 @@
 # Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Install PostgreSQL client for pg_isready
-RUN apt-get update && apt-get install -y postgresql-client
-
-# Install dotnet-ef tool
+# Install dotnet-ef tool (if needed for migrations or other operations)
 RUN dotnet tool install --global dotnet-ef
 
 # Set the working directory in the container
 WORKDIR /app
-
-# Create necessary directories for the .csproj files
-RUN rm -rf /app/src/AuthService.API && mkdir -p /app/src/AuthService.API
-RUN rm -rf /app/src/AuthService.Application && mkdir -p /app/src/AuthService.Application
-RUN rm -rf /app/src/AuthService.Infrastructure && mkdir -p /app/src/AuthService.Infrastructure
-RUN rm -rf /app/src/AuthService.Domain && mkdir -p /app/src/AuthService.Domain
 
 # Copy the .csproj files
 COPY src/AuthService.API/AuthService.API.csproj /app/src/AuthService.API/
 COPY src/AuthService.Application/AuthService.Application.csproj /app/src/AuthService.Application/
 COPY src/AuthService.Domain/AuthService.Domain.csproj /app/src/AuthService.Domain/
 COPY src/AuthService.Infrastructure/AuthService.Infrastructure.csproj /app/src/AuthService.Infrastructure/
-
 COPY tests/AuthService.UnitTests/AuthService.UnitTests.csproj /app/tests/AuthService.UnitTests/
 
-# Now restore dependencies for each project
+# Restore dependencies for the AuthService API project
 RUN dotnet restore /app/src/AuthService.API/AuthService.API.csproj
-RUN dotnet restore /app/src/AuthService.Application/AuthService.Application.csproj
-RUN dotnet restore /app/src/AuthService.Domain/AuthService.Domain.csproj
-RUN dotnet restore /app/src/AuthService.Infrastructure/AuthService.Infrastructure.csproj
 
 # Copy the entire codebase into the container
 COPY src/ /app/src/
-
 COPY tests/ /app/tests/
 
 # Publish the application to the /out folder
