@@ -1,6 +1,9 @@
 # Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
+# Install PostgreSQL client for pg_isready
+RUN apt-get update && apt-get install -y postgresql-client
+
 # Install dotnet-ef tool
 RUN dotnet tool install --global dotnet-ef
 
