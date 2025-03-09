@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /app
+
+COPY ["src/UserService.API/UserService.API.csproj", "src/UserService.API/UserService.API.csproj"]
+COPY ["src/UserService.Application/UserService.Application.csproj", "src/UserService.Application/UserService.Application.csproj"]
+COPY ["src/UserService.Domain/UserService.Domain.csproj", "src/UserService.Domain/UserService.Domain.csproj"]
+COPY ["src/UserService.Infrastructure/UserService.Infrastructure.csproj", "src/UserService.Infrastructure/UserService.Infrastructure.csproj"]
+
+RUN dotnet restore src/UserService.API/UserService.API.csproj
+RUN dotnet restore src/UserService.Application/UserService.Application.csproj
+RUN dotnet restore src/UserService.Domain/UserService.Domain.csproj
+RUN dotnet restore src/UserService.Infrastructure/UserService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/UserService.Infrastructure/ --startup-project src/UserService.API/

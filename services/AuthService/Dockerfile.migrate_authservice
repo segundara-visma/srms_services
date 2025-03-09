@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /src
+
+COPY ["src/AuthService.API/AuthService.API.csproj", "src/AuthService.API/AuthService.API.csproj"]
+COPY ["src/AuthService.Application/AuthService.Application.csproj", "src/AuthService.Application/AuthService.Application.csproj"]
+COPY ["src/AuthService.Domain/AuthService.Domain.csproj", "src/AuthService.Domain/AuthService.Domain.csproj"]
+COPY ["src/AuthService.Infrastructure/AuthService.Infrastructure.csproj", "src/AuthService.Infrastructure/AuthService.Infrastructure.csproj"]
+
+RUN dotnet restore src/AuthService.API/AuthService.API.csproj
+RUN dotnet restore src/AuthService.Application/AuthService.Application.csproj
+RUN dotnet restore src/AuthService.Domain/AuthService.Domain.csproj
+RUN dotnet restore src/AuthService.Infrastructure/AuthService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/AuthService.Infrastructure/ --startup-project src/AuthService.API/

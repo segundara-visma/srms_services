@@ -12,17 +12,60 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest  # Use GitHub-hosted runner (Ubuntu)
+    
+    services:
+      # Set up Docker Compose and the necessary services
+      docker:
+        image: docker:19.03.12 # Use a Docker image to run docker commands
+        options: --privileged # Required to use Docker in Docker (DinD)
+        ports:
+          - 5000:8080
+          - 5001:8080
+          - 6379:6379
+          - 5433:5432
+          - 5434:5432
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3  # Checkout the repo code
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3  # Setup .NET SDK (use v3 if you are using .NET 7 or newer)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
         with:
-          dotnet-version: '9.0'  # Use the version of .NET you are working with, e.g., 6.0, 7.0
+          version: latest
 
-      - name: Restore dependencies
+      - name: Set up Docker Compose
+        uses: docker/setup-buildx-action@v2  # Set up Docker Compose
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v3  # Setup .NET SDK (use v3 if you are using .NET 9)
+        with:
+          dotnet-version: '9.0'
+
+      - name: Build Docker images using Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml build  # Build the services
+
+      - name: Start services using Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml up -d  # Start services in detached mode
+
+      - name: Wait for services to be ready
+        run: |
+          # Wait for services to be ready (ensure DB, Redis are available)
+          docker-compose -f docker-compose.yml exec -T authservice /bin/sh -c "until pg_isready -h authdb -U postgres; do echo waiting for authdb; sleep 2; done"
+          docker-compose -f docker-compose.yml exec -T userservice /bin/sh -c "until pg_isready -h userdb -U postgres; do echo waiting for userdb; sleep 2; done"
+          docker-compose -f docker-compose.yml exec -T redis /bin/sh -c "until redis-cli -h redis ping; do echo waiting for redis; sleep 2; done"
+
+      - name: Restore .NET dependencies
         run: dotnet restore  # Restore NuGet dependencies
 
       - name: Build the project
@@ -34,6 +77,9 @@ jobs:
       - name: Publish Test Results
         uses: actions/upload-artifact@v4
         with:
-            name: test-results
-            path: $(System.DefaultWorkingDirectory)/TestResults/*.xml
-        
+          name: test-results
+          path: $(System.DefaultWorkingDirectory)/TestResults/*.xml
+
+      - name: Stop and remove Docker Compose services
+        run: |
+          docker-compose -f docker-compose.yml down  # Clean up the services after tests are done
