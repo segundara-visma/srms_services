@@ -7,6 +7,8 @@ namespace AuthService.Application.Interfaces;
 
 public interface IAuthService
 {
+    Task RevokeTokenAsync(string token);
+    Task<bool> IsTokenRevokedAsync(string tokenId);
     Task<LoginResponse> LoginUser(string email, string password);  // This method handles the business logic for user login
     Task<LoginResponse> RefreshToken(string refreshToken);
     Task Logout(string refreshToken);

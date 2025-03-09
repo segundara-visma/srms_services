@@ -5,6 +5,7 @@ using BCrypt.Net;
 using AuthService.Application.Helpers;  // Include the Helpers namespace
 using AuthService.Application.DTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
@@ -18,15 +19,76 @@ public class AuthServices : IAuthService
     private readonly IRefreshTokenRepository _refreshTokenRepository;  // Add this to interact with the refresh token database
     private readonly JWTTokenHelper _jwtTokenHelper;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IDistributedCache _cache; // For Redis
 
     // Constructor injection
-    public AuthServices(IUserService userService, IAuthRepository authRepository, IRefreshTokenRepository refreshTokenRepository, JWTTokenHelper jwtTokenHelper, IHttpContextAccessor httpContextAccessor)
+    public AuthServices(IUserService userService, IAuthRepository authRepository, IRefreshTokenRepository refreshTokenRepository, JWTTokenHelper jwtTokenHelper, IHttpContextAccessor httpContextAccessor, IDistributedCache cache)
     {
         _userService = userService;
         _authRepository = authRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtTokenHelper = jwtTokenHelper;  // Inject JWTTokenHelper
         _httpContextAccessor = httpContextAccessor;  // Inject IHttpContextAccessor
+        _cache = cache;
+    }
+
+    // Revoke a token by storing its tokenId (jti) in the cache with a short TTL (Time-To-Live)
+    public async Task RevokeTokenAsync(string token)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            var tokenId = jwtToken?.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
+
+            if (tokenId == null)
+            {
+                throw new InvalidOperationException("Token ID (jti) missing from token.");
+            }
+
+            // Store the tokenId in the cache with a short TTL
+            var options = new DistributedCacheEntryOptions()
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+            };
+
+            await _cache.SetStringAsync(tokenId, "revoked", options); // Storing tokenId in the cache
+        }
+        catch (SecurityTokenMalformedException ex)
+        {
+            throw new InvalidOperationException("Malformed token", ex);
+        }
+    }
+
+    // Check if the token is revoked by checking its tokenId (jti) in the cache
+    public async Task<bool> IsTokenRevokedAsync(string token)
+    {
+        try
+        {
+            // Extract tokenId (jti) from the token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+
+            var tokenId = jwtToken?.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
+
+            if (tokenId == null)
+            {
+                throw new InvalidOperationException("Token ID (jti) missing from token.");
+            }
+
+            // Check if the tokenId exists in the cache (i.e., if the token is revoked)
+            var revokedToken = await _cache.GetStringAsync(tokenId);
+            return revokedToken != null;
+        }
+        catch (SecurityTokenMalformedException)
+        {
+            throw new InvalidOperationException("The token is malformed and cannot be read.");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An error occurred while checking if the token is revoked.", ex);
+        }
     }
 
     // Login logic
