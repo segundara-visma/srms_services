@@ -44,10 +44,50 @@ jobs:
 
       - name: Wait for services to be ready
         run: |
-          # Wait for PostgreSQL using curl to check if the port is open
-          docker-compose -f docker-compose.yml exec -T authservice /bin/sh -c "until curl -s http://authdb:5432; do echo waiting for authdb; sleep 2; done"
-          docker-compose -f docker-compose.yml exec -T userservice /bin/sh -c "until curl -s http://userdb:5432; do echo waiting for userdb; sleep 2; done"
-          docker-compose -f docker-compose.yml exec -T redis /bin/sh -c "until curl -s redis:6379; do echo waiting for redis; sleep 2; done"
+          # Set maximum retry count and timeout for pg_isready
+          MAX_RETRIES=30
+          RETRY_COUNT=0
+          WAIT_INTERVAL=2
+
+          # Wait for PostgreSQL (authdb) to be ready
+          until pg_isready -h authdb -U postgres || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+            echo "waiting for authdb ($RETRY_COUNT/$MAX_RETRIES)..."
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            sleep $WAIT_INTERVAL
+          done
+
+          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo "AuthDB is not ready after $MAX_RETRIES retries, exiting."
+            exit 1
+          fi
+
+          RETRY_COUNT=0
+          # Wait for PostgreSQL (userdb) to be ready
+          until pg_isready -h userdb -U postgres || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+            echo "waiting for userdb ($RETRY_COUNT/$MAX_RETRIES)..."
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            sleep $WAIT_INTERVAL
+          done
+
+          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo "UserDB is not ready after $MAX_RETRIES retries, exiting."
+            exit 1
+          fi
+
+          RETRY_COUNT=0
+          # Wait for Redis to be ready
+          until redis-cli -h redis ping || [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
+            echo "waiting for redis ($RETRY_COUNT/$MAX_RETRIES)..."
+            RETRY_COUNT=$((RETRY_COUNT+1))
+            sleep $WAIT_INTERVAL
+          done
+
+          if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            echo "Redis is not ready after $MAX_RETRIES retries, exiting."
+            exit 1
+          fi
+
+          echo "All services are ready!"
 
       - name: Restore .NET dependencies
         run: dotnet restore  # Restore NuGet dependencies

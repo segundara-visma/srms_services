@@ -1,8 +1,8 @@
 # Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Install curl (make sure curl is available in the container)
-RUN apt-get update && apt-get install -y curl
+# Install PostgreSQL client (pg_isready)
+RUN apt-get update && apt-get install -y postgresql-client
 
 # Install dotnet-ef tool (if needed for migrations or other operations)
 RUN dotnet tool install --global dotnet-ef
@@ -32,9 +32,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 
 # Set the working directory in the container
 WORKDIR /app
-
-# Install curl in the final runtime image too
-RUN apt-get update && apt-get install -y curl
 
 # Copy the published application from the build stage
 COPY --from=build /out .
