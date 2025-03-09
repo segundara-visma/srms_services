@@ -1,3 +1,14 @@
+name: CI Pipeline for SRMS App
+
+# Trigger the workflow on push or pull request events
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest  # Use GitHub-hosted runner (Ubuntu)
