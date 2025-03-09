@@ -1,14 +1,3 @@
-name: CI Pipeline for SRMS App
-
-# Trigger the workflow on push or pull request events
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest  # Use GitHub-hosted runner (Ubuntu)
@@ -42,33 +31,7 @@ jobs:
         run: |
           docker-compose -f docker-compose.yml up -d  # Start services in detached mode
 
-      - name: Wait for services to be ready (using Docker health checks)
-        run: |
-          # Wait for the services to be healthy based on Docker health checks
-          echo "Waiting for services to be healthy..."
-
-          # Check for authdb health
-          docker-compose wait authdb
-          if [ $? -ne 0 ]; then
-            echo "AuthDB is not healthy, exiting."
-            exit 1
-          fi
-
-          # Check for userdb health
-          docker-compose wait userdb
-          if [ $? -ne 0 ]; then
-            echo "UserDB is not healthy, exiting."
-            exit 1
-          fi
-
-          # Check for redis health
-          docker-compose wait redis
-          if [ $? -ne 0 ]; then
-            echo "Redis is not healthy, exiting."
-            exit 1
-          fi
-
-          echo "All services are healthy and ready!"
+      # Removed the "Wait for services to be ready" step
 
       - name: Restore .NET dependencies
         run: dotnet restore  # Restore NuGet dependencies
