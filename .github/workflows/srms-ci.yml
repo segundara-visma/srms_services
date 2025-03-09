@@ -42,11 +42,11 @@ jobs:
 
       - name: Wait for services to be ready
         run: |
-          # Wait for authdb to be ready (using bash and netcat to check if the DB port is open)
-          docker-compose -f docker-compose.yml exec -T authservice /bin/sh -c "until nc -z authdb 5432; do echo waiting for authdb; sleep 2; done"
+          # Wait for authdb to be ready (using curl to check if the port is open)
+          docker-compose -f docker-compose.yml exec -T authservice /bin/sh -c "until curl -s authdb:5432; do echo waiting for authdb; sleep 2; done"
           
           # Wait for userdb to be ready (same method for userdb)
-          docker-compose -f docker-compose.yml exec -T userservice /bin/sh -c "until nc -z userdb 5432; do echo waiting for userdb; sleep 2; done"
+          docker-compose -f docker-compose.yml exec -T userservice /bin/sh -c "until curl -s userdb:5432; do echo waiting for userdb; sleep 2; done"
 
           # Wait for Redis to be ready
           docker-compose -f docker-compose.yml exec -T redis /bin/sh -c "until redis-cli -h redis ping; do echo waiting for redis; sleep 2; done"
