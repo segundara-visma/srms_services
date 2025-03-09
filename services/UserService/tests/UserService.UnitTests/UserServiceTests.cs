@@ -1,65 +1,58 @@
 ﻿using System;
 using System.Threading.Tasks;
-using UserService.Application.Interfaces;
-using UserService.Application.Services;
-using UserService.Domain.Entities;
-using Moq;
-using Xunit;
 using FluentAssertions;
-using BCrypt.Net;  // Add this to handle password hashing
-using Microsoft.AspNetCore.Http;  // For mocking cookies
-using Xunit.Abstractions;
+using Xunit;
+using UserService.Domain.Entities;  // For User and Role definitions
+using Moq;  // Ensure this namespace is included
 
 namespace UserService.UnitTests
 {
-    public class UserServiceTests
+    public class UserServiceTests : BaseTest
     {
-        private readonly Mock<IUserRepository> _userRepositoryMock;
-        private readonly IUserService _userService;
-        private readonly ITestOutputHelper _output;  // Add this line to capture output
-
-        // Constructor to initialize the mocks
-        public UserServiceTests(ITestOutputHelper output)
-        {
-            _output = output;  // Assign to the private field
-            _userRepositoryMock = new Mock<IUserRepository>();
-
-            _userService = new UserServices(_userRepositoryMock.Object);
-        }
-
-        // Test case for successful user registration
         [Fact]
-        public async Task RegisterUser_Should_Create_New_User_When_Valid()
+        public async Task ValidatePasswordAsync_Should_Return_True_When_Password_Is_Valid()
         {
             // Arrange
-            var rawPassword = "password123";  // raw password input by the user
-            var roleName = "Student";  // the user's role
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(rawPassword);  // Hash the password for storage
-            var newUser = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "test@example.com",
-                PasswordHash = hashedPassword,
-                Firstname = "First",
-                Lastname = "Last",
-                // Role = "Student" 
-            };
-
-            // Mock behavior: GetByEmailAsync returns null, indicating no user exists with this email
-            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(newUser.Email)).ReturnsAsync((User?)null);  // Ensure null is properly casted as User?
-
-            // Mock behavior: AddAsync completes without doing anything
-            _userRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<User>())).Returns(Task.CompletedTask);
-
-            // Mock the role fetching (assuming you have a method GetRoleByNameAsync)
-            var mockRole = new Role { Id = 3, Name = "Student" };  // Mock the role object
-            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync(mockRole);  // Mock role retrieval
+            var user = CreateTestUser();
+            var password = "password123";
+            // Mock the repository to return the user
+            MockGetByIdAsync(user);
 
             // Act
-            await _userService.RegisterUser(newUser, rawPassword, roleName);  // Pass the user object and the rawPassword
+            var result = await _userService.ValidatePasswordAsync(user.Id, password);
 
             // Assert
-            _userRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<User>()), Times.Once);
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task ValidatePasswordAsync_Should_Return_False_When_Password_Is_Invalid()
+        {
+            // Arrange
+            var user = CreateTestUser();
+            var password = "wrongpassword";
+            // Mock the repository to return the user
+            MockGetByIdAsync(user);
+
+            // Act
+            var result = await _userService.ValidatePasswordAsync(user.Id, password);
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task ValidatePasswordAsync_Should_Return_False_When_User_Not_Found()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(userId)).ReturnsAsync((User?)null);  // No user found
+
+            // Act
+            var result = await _userService.ValidatePasswordAsync(userId, "password123");
+
+            // Assert
+            result.Should().BeFalse();
         }
     }
 }
