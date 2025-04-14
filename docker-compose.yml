@@ -32,6 +32,22 @@ services:
       - userdb  # Ensure that the database is started before the User Service
       - migrate_userservice
 
+  courseservice:
+    build:
+      context: ./services/CourseService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+    networks:
+      - backend
+    depends_on:
+      - coursedb  # Ensure that the database is started before the Course Service
+      - migrate_courseservice
+
   userdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
     environment:
@@ -70,6 +86,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+  coursedb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=CourseServiceDb  # Database name
+    volumes:
+      - coursedb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5435:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d CourseServiceDb -h coursedb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   migrate_userservice:
     build:
       context: ./services/UserService
@@ -85,6 +120,15 @@ services:
       dockerfile: Dockerfile.migrate_authservice  # Reference to Dockerfile for migrations
     depends_on:
       - authdb
+    networks:
+      - backend
+
+  migrate_courseservice:
+    build:
+      context: ./services/CourseService
+      dockerfile: Dockerfile.migrate_courseservice  # Reference to Dockerfile for migrations
+    depends_on:
+      - coursedb
     networks:
       - backend
 
@@ -109,3 +153,4 @@ networks:
 volumes:
   userdb_data:
   authdb_data:
+  coursedb_data:
