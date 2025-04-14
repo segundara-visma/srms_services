@@ -21,3 +21,4 @@ TestResults/
 
 # Other generated files
 .vs/
+*.csproj.user
