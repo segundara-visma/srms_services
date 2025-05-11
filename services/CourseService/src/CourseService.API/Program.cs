@@ -5,6 +5,9 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.DependencyInjection;
+using CourseService.Application.Interfaces;
+using CourseService.Application.Services;
+using CourseService.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,17 @@ builder.Services.AddAuthentication(options =>
                     {
                         var tokenId = token.Id;
                         Console.WriteLine($"Token validated: {tokenId}");
+
+                        // Call your service to check if the token is revoked
+                        var tokenRevocationService = context.HttpContext.RequestServices.GetRequiredService<TokenValidationService>();
+                        var isRevoked = await tokenRevocationService.IsTokenRevokedAsync(tokenId);
+                        Console.WriteLine($"IsTokenRevoked: {isRevoked}");
+
+                        if (isRevoked)
+                        {
+                            context.Fail("Token is revoked.");
+                            return;
+                        }
                     }
                     else
                     {
