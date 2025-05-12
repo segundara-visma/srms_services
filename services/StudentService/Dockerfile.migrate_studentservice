@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /app
+
+COPY ["src/StudentService.API/StudentService.API.csproj", "src/StudentService.API/StudentService.API.csproj"]
+COPY ["src/StudentService.Application/StudentService.Application.csproj", "src/StudentService.Application/StudentService.Application.csproj"]
+COPY ["src/StudentService.Domain/StudentService.Domain.csproj", "src/StudentService.Domain/StudentService.Domain.csproj"]
+COPY ["src/StudentService.Infrastructure/StudentService.Infrastructure.csproj", "src/StudentService.Infrastructure/StudentService.Infrastructure.csproj"]
+
+RUN dotnet restore src/StudentService.API/StudentService.API.csproj
+RUN dotnet restore src/StudentService.Application/StudentService.Application.csproj
+RUN dotnet restore src/StudentService.Domain/StudentService.Domain.csproj
+RUN dotnet restore src/StudentService.Infrastructure/StudentService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/StudentService.Infrastructure/ --startup-project src/StudentService.API/
