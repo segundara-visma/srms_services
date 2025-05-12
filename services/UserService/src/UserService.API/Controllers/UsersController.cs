@@ -32,7 +32,7 @@ public class UsersController : ControllerBase
     /// <param name="id">The user's unique identifier.</param>
     /// <returns>A user object.</returns>
     [HttpGet("{id}")]
-    [Authorize]  // Validate the credentials before going ahead to process the request
+    [Authorize]
     public async Task<IActionResult> GetUserById(Guid id)
     {
 
