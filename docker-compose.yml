@@ -48,6 +48,22 @@ services:
       - coursedb  # Ensure that the database is started before the Course Service
       - migrate_courseservice
 
+  studentservice:
+    build:
+      context: ./services/StudentService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+    networks:
+      - backend
+    depends_on:
+      - studentdb  # Ensure that the database is started before the Student Service
+      - migrate_studentservice
+
   userdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
     environment:
@@ -105,6 +121,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+  studentdb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=StudentServiceDb  # Database name
+    volumes:
+      - studentdb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5436:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d StudentServiceDb -h studentdb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   migrate_userservice:
     build:
       context: ./services/UserService
@@ -132,6 +167,15 @@ services:
     networks:
       - backend
 
+  migrate_studentservice:
+    build:
+      context: ./services/StudentService
+      dockerfile: Dockerfile.migrate_studentservice  # Reference to Dockerfile for migrations
+    depends_on:
+      - studentdb
+    networks:
+      - backend
+
   redis:
     image: redis:latest
     container_name: redis
@@ -154,3 +198,4 @@ volumes:
   userdb_data:
   authdb_data:
   coursedb_data:
+  studentdb_data:
