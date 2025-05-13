@@ -9,12 +9,13 @@ namespace StudentService.UnitTests;
 public class GetStudentTests : BaseTest
 {
     [Fact]
-    public async Task GetStudentById_ExistingStudent_ReturnsStudentDTO()
+    public async Task GetStudentByIdAsync_ValidUserId_ReturnsStudentDTO()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var student = CreateTestStudent(userId: userId);
         var userDTO = CreateTestUserDTO(userId);
+
         MockGetStudentByUserIdAsync(userId, student);
         MockGetUserByIdAsync(userId, userDTO);
 
@@ -31,13 +32,30 @@ public class GetStudentTests : BaseTest
     }
 
     [Fact]
-    public async Task GetStudentById_NonExistingStudent_ThrowsException()
+    public async Task GetStudentByIdAsync_NonExistingStudent_ThrowsException()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _studentRepositoryMock.Setup(repo => repo.GetByUserIdAsync(userId)).ReturnsAsync((Student)null);
+        MockGetStudentByUserIdAsync(userId, null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _studentService.GetStudentByIdAsync(userId));
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _studentService.GetStudentByIdAsync(userId));
+        Assert.Contains($"Student with User ID {userId} not found", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetStudentByIdAsync_NonStudentUser_ThrowsException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var student = CreateTestStudent(userId: userId);
+        var userDTO = new UserDTO(userId, "John", "Doe", "john.doe@example.com", "Teacher"); // Wrong role
+
+        MockGetStudentByUserIdAsync(userId, student);
+        MockGetUserByIdAsync(userId, userDTO);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _studentService.GetStudentByIdAsync(userId));
+        Assert.Contains($"User with ID {userId} is not a student", exception.Message);
     }
 }
