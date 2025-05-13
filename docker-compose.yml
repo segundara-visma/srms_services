@@ -64,6 +64,22 @@ services:
       - studentdb  # Ensure that the database is started before the Student Service
       - migrate_studentservice
 
+  enrollmentservice:
+    build:
+      context: ./services/EnrollmentService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+    networks:
+      - backend
+    depends_on:
+      - enrollmentdb  # Ensure that the database is started before the Enrollment Service
+      - migrate_enrollmentservice
+
   userdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
     environment:
@@ -140,6 +156,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+  enrollmentdb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=EnrollmentServiceDb  # Database name
+    volumes:
+      - enrollmentdb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5437:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d EnrollmentServiceDb -h enrollmentdb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   migrate_userservice:
     build:
       context: ./services/UserService
@@ -176,6 +211,15 @@ services:
     networks:
       - backend
 
+  migrate_enrollmentservice:
+    build:
+      context: ./services/EnrollmentService
+      dockerfile: Dockerfile.migrate_enrollmentservice  # Reference to Dockerfile for migrations
+    depends_on:
+      - enrollmentdb
+    networks:
+      - backend
+
   redis:
     image: redis:latest
     container_name: redis
@@ -199,3 +243,4 @@ volumes:
   authdb_data:
   coursedb_data:
   studentdb_data:
+  enrollmentdb_data:
