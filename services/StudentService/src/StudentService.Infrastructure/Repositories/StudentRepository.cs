@@ -19,14 +19,12 @@ public class StudentRepository : IStudentRepository
     public async Task<Student> GetByIdAsync(Guid id)
     {
         return await _context.Students
-            .Include(s => s.Enrollments)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
     public async Task<Student> GetByUserIdAsync(Guid userId)
     {
         return await _context.Students
-            .Include(s => s.Enrollments)
             .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
@@ -45,7 +43,6 @@ public class StudentRepository : IStudentRepository
     public async Task<IEnumerable<Student>> GetAllAsync()
     {
         return await _context.Students
-            .Include(s => s.Enrollments)
             .ToListAsync();
     }
 }

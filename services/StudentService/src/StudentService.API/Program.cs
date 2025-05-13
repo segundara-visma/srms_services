@@ -134,20 +134,11 @@ builder.Services.AddScoped<TokenValidationService>();  // Ensure TokenValidation
 // Configure Auth0 settings
 builder.Services.Configure<Auth0Settings>(builder.Configuration.GetSection("Auth0Settings"));
 
-// Register HttpClient with base addresses for UserService and CourseService
+// Register HttpClient with base addresses for UserService
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ServiceSettings:UserServiceBaseUrl"] ?? "http://userservice:8080");
 });
-builder.Services.AddHttpClient<ICourseServiceClient, CourseServiceClient>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ServiceSettings:CourseServiceBaseUrl"] ?? "http://courseservice:8080");
-});
-
-//// Add Health Checks
-//builder.Services.AddHealthChecks()
-//    .AddDbContextCheck<StudentDbContext>()
-//    .AddRedis(builder.Configuration["Redis:ConnectionString"], "Redis Health Check");
 
 // Configure Logging
 builder.Services.AddLogging(logging =>
@@ -169,13 +160,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAll");
-
-//// Add Health Check endpoint
-//app.MapHealthChecks("/health");
 
 app.MapControllers();
 
