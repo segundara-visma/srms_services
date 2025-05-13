@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /app
+
+COPY ["src/EnrollmentService.API/EnrollmentService.API.csproj", "src/EnrollmentService.API/EnrollmentService.API.csproj"]
+COPY ["src/EnrollmentService.Application/EnrollmentService.Application.csproj", "src/EnrollmentService.Application/EnrollmentService.Application.csproj"]
+COPY ["src/EnrollmentService.Domain/EnrollmentService.Domain.csproj", "src/EnrollmentService.Domain/EnrollmentService.Domain.csproj"]
+COPY ["src/EnrollmentService.Infrastructure/EnrollmentService.Infrastructure.csproj", "src/EnrollmentService.Infrastructure/EnrollmentService.Infrastructure.csproj"]
+
+RUN dotnet restore src/EnrollmentService.API/EnrollmentService.API.csproj
+RUN dotnet restore src/EnrollmentService.Application/EnrollmentService.Application.csproj
+RUN dotnet restore src/EnrollmentService.Domain/EnrollmentService.Domain.csproj
+RUN dotnet restore src/EnrollmentService.Infrastructure/EnrollmentService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/EnrollmentService.Infrastructure/ --startup-project src/EnrollmentService.API/
