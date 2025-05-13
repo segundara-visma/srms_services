@@ -48,14 +48,14 @@ namespace CourseService.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+                            Id = new Guid("6daa15cc-f355-42e7-99aa-9a52086350a7"),
                             Code = "MATH101",
                             MaxStudents = 30,
                             Name = "Mathematics 101"
                         },
                         new
                         {
-                            Id = new Guid("b2c3d4e5-f678-90ab-cdef-1234567890ab"),
+                            Id = new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"),
                             Code = "PHYS101",
                             MaxStudents = 40,
                             Name = "Physics 101"

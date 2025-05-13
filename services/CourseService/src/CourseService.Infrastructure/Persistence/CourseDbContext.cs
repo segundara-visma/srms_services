@@ -33,8 +33,8 @@ public class CourseDbContext : DbContext
         modelBuilder.Entity<Course>().HasData(
             // Specified fixed Guid values for the Id fields to ensure consistency in the seeded data
             // (random Guid.NewGuid() values would change on each migration, which isn’t ideal for seeding)
-            new Course(new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"), "Mathematics 101", "MATH101", 30),
-            new Course(new Guid("b2c3d4e5-f678-90ab-cdef-1234567890ab"), "Physics 101", "PHYS101", 40)
+            new Course(new Guid("6daa15cc-f355-42e7-99aa-9a52086350a7"), "Mathematics 101", "MATH101", 30),
+            new Course(new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"), "Physics 101", "PHYS101", 40)
         );
     }
 }
