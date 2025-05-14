@@ -3,6 +3,7 @@ using EnrollmentService.Application.Interfaces;
 using EnrollmentService.Application.DTOs;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EnrollmentService.API.Controllers;
 
@@ -11,6 +12,7 @@ namespace EnrollmentService.API.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class EnrollmentController : ControllerBase
 {
     private readonly IEnrollmentService _enrollmentService;
