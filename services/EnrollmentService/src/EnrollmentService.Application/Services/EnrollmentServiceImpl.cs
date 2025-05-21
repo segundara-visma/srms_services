@@ -104,4 +104,18 @@ public class EnrollmentServiceImpl : IEnrollmentService
         enrollment.Status = EnrollmentStatus.Cancelled;
         await _enrollmentRepository.UpdateAsync(enrollment);
     }
+
+    public async Task<bool> CheckEnrollmentAsync(Guid studentId, Guid courseId)
+    {
+        var user = await _userServiceClient.GetUserByIdAsync(studentId);
+        if (user == null || user.Role != "Student")
+            return false; // Don't throw an exception; just return false for GradeService integration
+
+        var course = await _courseServiceClient.GetCourseByIdAsync(courseId);
+        if (course == null)
+            return false; // Don't throw an exception; just return false
+
+        var enrollment = await _enrollmentRepository.GetByStudentAndCourseAsync(studentId, courseId);
+        return enrollment != null && enrollment.Status == EnrollmentStatus.Enrolled;
+    }
 }

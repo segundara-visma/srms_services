@@ -10,4 +10,5 @@ public interface IEnrollmentRepository
     Task<IEnumerable<Enrollment>> GetByStudentIdAsync(Guid studentId);
     Task<IEnumerable<Enrollment>> GetByCourseIdAsync(Guid courseId);
     Task UpdateAsync(Enrollment enrollment);
+    Task<Enrollment?> GetByStudentAndCourseAsync(Guid studentId, Guid courseId);
 }
