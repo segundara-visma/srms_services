@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /app
+
+COPY ["src/GradeService.API/GradeService.API.csproj", "src/GradeService.API/GradeService.API.csproj"]
+COPY ["src/GradeService.Application/GradeService.Application.csproj", "src/GradeService.Application/GradeService.Application.csproj"]
+COPY ["src/GradeService.Domain/GradeService.Domain.csproj", "src/GradeService.Domain/GradeService.Domain.csproj"]
+COPY ["src/GradeService.Infrastructure/GradeService.Infrastructure.csproj", "src/GradeService.Infrastructure/GradeService.Infrastructure.csproj"]
+
+RUN dotnet restore src/GradeService.API/GradeService.API.csproj
+RUN dotnet restore src/GradeService.Application/GradeService.Application.csproj
+RUN dotnet restore src/GradeService.Domain/GradeService.Domain.csproj
+RUN dotnet restore src/GradeService.Infrastructure/GradeService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/GradeService.Infrastructure/ --startup-project src/GradeService.API/
