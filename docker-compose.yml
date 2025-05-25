@@ -96,24 +96,21 @@ services:
       - gradedb  # Ensure that the database is started before the Grade Service
       - migrate_gradeservice
 
-  userdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+  reportservice:
+    build:
+      context: ./services/ReportService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5006:8080"
     environment:
-      - POSTGRES_USER=postgres  # Database user
-      - POSTGRES_PASSWORD=segundara  # Database password
-      - POSTGRES_DB=UserServiceDb  # Database name
-    volumes:
-      - userdb_data:/var/lib/postgresql/data  # Persist data on the host machine
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
     networks:
       - backend
-    ports:
-      - "5434:5432"  # Expose PostgreSQL port to the host (optional)
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d UserServiceDb -h userdb"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
+    depends_on:
+      - reportdb  # Ensure that the database is started before the Report Service
+      - migrate_reportservice
 
   authdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
@@ -129,6 +126,25 @@ services:
       - "5433:5432"  # Expose PostgreSQL port to the host (optional)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d AuthServiceDb -h authdb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  userdb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=UserServiceDb  # Database name
+    volumes:
+      - userdb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5434:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d UserServiceDb -h userdb"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -210,6 +226,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+  reportdb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=ReportServiceDb  # Database name
+    volumes:
+      - reportdb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5439:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ReportServiceDb -h reportdb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   migrate_userservice:
     build:
       context: ./services/UserService
@@ -264,6 +299,15 @@ services:
     networks:
       - backend
 
+  migrate_reportservice:
+    build:
+      context: ./services/ReportService
+      dockerfile: Dockerfile.migrate_reportservice  # Reference to Dockerfile for migrations
+    depends_on:
+      - reportdb
+    networks:
+      - backend
+
   redis:
     image: redis:latest
     container_name: redis
@@ -289,3 +333,4 @@ volumes:
   studentdb_data:
   enrollmentdb_data:
   gradedb_data:
+  reportdb_data:
