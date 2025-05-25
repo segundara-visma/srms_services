@@ -61,6 +61,12 @@ public class GradeServiceImpl : IGradeService
         await _gradeRepository.AddAsync(grade);
     }
 
+    public async Task<IEnumerable<GradeDTO>> GetGradesByStudentAsync(Guid studentId)
+    {
+        var grades = await _gradeRepository.GetByStudentIdAsync(studentId);
+        return grades.Select(MapToDTO);
+    }
+
     private GradeDTO MapToDTO(Grade grade)
     {
         return new GradeDTO

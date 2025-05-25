@@ -36,4 +36,12 @@ public class GradeRepository : IGradeRepository
         await _context.Grades.AddAsync(grade);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Grade>> GetByStudentIdAsync(Guid studentId)
+    {
+        return await _context.Grades
+            .AsNoTracking()
+            .Where(g => g.StudentId == studentId)
+            .ToListAsync();
+    }
 }
