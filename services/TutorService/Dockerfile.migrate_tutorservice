@@ -1,0 +1,28 @@
+ARG DOTNET_RUNTIME=mcr.microsoft.com/dotnet/aspnet:9.0
+ARG DOTNET_SDK=mcr.microsoft.com/dotnet/sdk:9.0
+
+FROM ${DOTNET_RUNTIME} AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Base for build
+FROM ${DOTNET_SDK} AS buildbase
+WORKDIR /app
+
+COPY ["src/TutorService.API/TutorService.API.csproj", "src/TutorService.API/TutorService.API.csproj"]
+COPY ["src/TutorService.Application/TutorService.Application.csproj", "src/TutorService.Application/TutorService.Application.csproj"]
+COPY ["src/TutorService.Domain/TutorService.Domain.csproj", "src/TutorService.Domain/TutorService.Domain.csproj"]
+COPY ["src/TutorService.Infrastructure/TutorService.Infrastructure.csproj", "src/TutorService.Infrastructure/TutorService.Infrastructure.csproj"]
+
+RUN dotnet restore src/TutorService.API/TutorService.API.csproj
+RUN dotnet restore src/TutorService.Application/TutorService.Application.csproj
+RUN dotnet restore src/TutorService.Domain/TutorService.Domain.csproj
+RUN dotnet restore src/TutorService.Infrastructure/TutorService.Infrastructure.csproj
+
+COPY ["src/", "src/"]
+
+## Run migrations
+FROM buildbase as migrations
+RUN dotnet tool install --version 9.0.1 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update --project src/TutorService.Infrastructure/ --startup-project src/TutorService.API/
