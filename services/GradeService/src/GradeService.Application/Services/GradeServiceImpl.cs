@@ -67,6 +67,20 @@ public class GradeServiceImpl : IGradeService
         return grades.Select(MapToDTO);
     }
 
+    public async Task AssignGradeAsync(Guid studentId, Guid courseId, decimal grade)
+    {
+        var gradeDto = new GradeDTO
+        {
+            StudentId = studentId,
+            CourseId = courseId,
+            GradeValue = grade,
+            DateGraded = DateTime.UtcNow,
+            Comments = "Grade assigned via TutorService"
+        };
+
+        await AddGradeAsync(gradeDto);
+    }
+
     private GradeDTO MapToDTO(Grade grade)
     {
         return new GradeDTO

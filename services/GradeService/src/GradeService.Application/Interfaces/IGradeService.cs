@@ -11,4 +11,5 @@ public interface IGradeService
     Task<IEnumerable<GradeDTO>> GetAllGradesAsync();
     Task AddGradeAsync(GradeDTO gradeDto);
     Task<IEnumerable<GradeDTO>> GetGradesByStudentAsync(Guid studentId);
+    Task AssignGradeAsync(Guid studentId, Guid courseId, decimal grade);
 }

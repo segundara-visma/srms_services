@@ -37,4 +37,56 @@ public class ServiceToServiceController : ControllerBase
         var grades = await _gradeService.GetGradesByStudentAsync(studentId);
         return Ok(grades);
     }
+
+    /// <summary>
+    /// Assigns a grade to a student for a specific course, requested by TutorService.
+    /// </summary>
+    /// <param name="request">The request object containing the student ID, course ID, and grade value.</param>
+    /// <returns>
+    /// A 204 No Content response if the grade is successfully assigned, a 400 Bad Request if the input is invalid, or a 403 Forbidden if the student is not enrolled.
+    /// </returns>
+    /// <response code="204">Grade was successfully assigned.</response>
+    /// <response code="400">If the grade value is invalid (e.g., not between 0 and 100).</response>
+    /// <response code="403">If the student is not enrolled in the specified course.</response>
+    [HttpPost("assign")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AssignGrade([FromBody] AssignGradeRequest request)
+    {
+        try
+        {
+            await _gradeService.AssignGradeAsync(request.StudentId, request.CourseId, request.Grade);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+}
+
+/// <summary>
+/// Represents the request payload for assigning a grade to a student.
+/// </summary>
+public class AssignGradeRequest
+{
+    /// <summary>
+    /// Gets or sets the unique identifier of the student receiving the grade.
+    /// </summary>
+    public Guid StudentId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the unique identifier of the course for which the grade is assigned.
+    /// </summary>
+    public Guid CourseId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the numerical grade value (must be between 0 and 100).
+    /// </summary>
+    public decimal Grade { get; set; }
 }
