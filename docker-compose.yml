@@ -112,6 +112,22 @@ services:
       - reportdb  # Ensure that the database is started before the Report Service
       - migrate_reportservice
 
+  tutorservice:
+    build:
+      context: ./services/TutorService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5007:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+    networks:
+      - backend
+    depends_on:
+      - tutordb  # Ensure that the database is started before the Tutor Service
+      - migrate_tutorservice
+
   authdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
     environment:
@@ -245,6 +261,25 @@ services:
       start_period: 30s
       timeout: 10s
 
+  tutordb:
+    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    environment:
+      - POSTGRES_USER=postgres  # Database user
+      - POSTGRES_PASSWORD=segundara  # Database password
+      - POSTGRES_DB=TutorServiceDb  # Database name
+    volumes:
+      - tutordb_data:/var/lib/postgresql/data  # Persist data on the host machine
+    networks:
+      - backend
+    ports:
+      - "5440:5432"  # Expose PostgreSQL port to the host (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d TutorServiceDb -h tutordb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   migrate_userservice:
     build:
       context: ./services/UserService
@@ -308,6 +343,15 @@ services:
     networks:
       - backend
 
+  migrate_tutorservice:
+    build:
+      context: ./services/TutorService
+      dockerfile: Dockerfile.migrate_tutorservice  # Reference to Dockerfile for migrations
+    depends_on:
+      - tutordb
+    networks:
+      - backend
+
   redis:
     image: redis:latest
     container_name: redis
@@ -334,3 +378,4 @@ volumes:
   enrollmentdb_data:
   gradedb_data:
   reportdb_data:
+  tutordb_data:
