@@ -32,6 +32,9 @@ The application currently consists of the following services:
 * **Course Service**: Handles course-related functionality.
 * **Student Service**: Manages student data and operations.
 * **Enrollment Service**: Manages student enrollments in courses.
+* **Grade Service**: Handles grading and assessment.
+* **Report Service**: Generates reports/transcripts for students.
+* **Tutor Service**: Manages tutor-related functionality.
 
 ---
 
@@ -80,9 +83,6 @@ The application currently consists of the following services:
 * **Frontend**: A web app is planned but not yet specified.
 * **Logging and Service Discovery**: To be added in future iterations.
 * **Additional Services**:
-  * **Grade Service**: Will handle grading and assessment.
-  * **Report Service**: Will generate reports for the system.
-  * **Tutor Service**: Will manage tutor-related functionality.
   * **Admin Service**: Will provide administrative capabilities.
 
 ---
