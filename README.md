@@ -11,6 +11,112 @@
 ## Overview[![](./src/assets/images/pin.jpg)](#introduction)
 
 This project is a microservices-based application built using .NET with Clean Architecture principles. Each service is independent, exposes HTTP endpoints, and follows a layered structure: **Presentation → Application → Domain → Infrastructure**.
+```mermaid
+graph TD
+    subgraph Client
+        A[Client App]
+    end
+
+    subgraph Services
+        AUTH[Auth Service]
+        USER[User Service]
+        STUDENT[Student Service]
+        COURSE[Course Service]
+        ENROLL[Enrollment Service]
+        GRADE[Grade Service]
+        TUTOR[Tutor Service]
+        REPORT[Report Service]
+        ADMIN[Admin Service]
+    end
+
+    subgraph Data
+        AUTH_DB[PostgreSQL Auth]
+        USER_DB[PostgreSQL User]
+        STUDENT_DB[PostgreSQL Student]
+        COURSE_DB[PostgreSQL Course]
+        ENROLL_DB[PostgreSQL Enrollment]
+        GRADE_DB[PostgreSQL Grade]
+        TUTOR_DB[PostgreSQL Tutor]
+        REPORT_DB[PostgreSQL Report]
+    end
+
+    subgraph Token Management
+        REDIS[Redis]
+    end
+
+    subgraph Deployment
+        DOCKER[Docker Containers]
+        CI_CD[GitHub Actions]
+    end
+
+    %% Client to Services (HTTP)
+    A -->|HTTP| AUTH
+    A -->|HTTP| USER
+    A -->|HTTP| STUDENT
+    A -->|HTTP| COURSE
+    A -->|HTTP| ENROLL
+    A -->|HTTP| GRADE
+    A -->|HTTP| TUTOR
+    A -->|HTTP| REPORT
+    A -->|HTTP| ADMIN
+
+    %% Services to Redis (Token Validation)
+    AUTH -->|Token Validation| REDIS
+    USER -->|Token Validation| REDIS
+    STUDENT -->|Token Validation| REDIS
+    COURSE -->|Token Validation| REDIS
+    ENROLL -->|Token Validation| REDIS
+    GRADE -->|Token Validation| REDIS
+    TUTOR -->|Token Validation| REDIS
+    REPORT -->|Token Validation| REDIS
+    ADMIN -->|Token Validation| REDIS
+
+    %% Service-to-Service (Auth0)
+    AUTH -->|Auth0| USER
+    ADMIN -->|Auth0| COURSE
+    ADMIN -->|Auth0| STUDENT
+    ADMIN -->|Auth0| ENROLL
+    ADMIN -->|Auth0| GRADE
+    ADMIN -->|Auth0| USER
+    ADMIN -->|Auth0| TUTOR
+    ENROLL -->|Auth0| COURSE
+    ENROLL -->|Auth0| USER
+    GRADE -->|Auth0| ENROLL
+    REPORT -->|Auth0| COURSE
+    REPORT -->|Auth0| ENROLL
+    REPORT -->|Auth0| GRADE
+    STUDENT -->|Auth0| COURSE
+    STUDENT -->|Auth0| USER
+    TUTOR -->|Auth0| GRADE
+    TUTOR -->|Auth0| USER
+
+    %% Services to Databases
+    AUTH --> AUTH_DB
+    USER --> USER_DB
+    STUDENT --> STUDENT_DB
+    COURSE --> COURSE_DB
+    ENROLL --> ENROLL_DB
+    GRADE --> GRADE_DB
+    TUTOR --> TUTOR_DB
+    REPORT --> REPORT_DB
+
+    %% Deployment
+    DOCKER -->|Deploys| Services
+    CI_CD -->|Builds| DOCKER
+
+    %% Styling for clarity
+    classDef service fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef data fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef client fill:#dfd,stroke:#333,stroke-width:2px;
+    classDef deployment fill:#ffb,stroke:#333,stroke-width:2px;
+    classDef token fill:#fbf,stroke:#333,stroke-width:2px;
+
+    class A client;
+    class AUTH,USER,STUDENT,COURSE,ENROLL,GRADE,TUTOR,REPORT,ADMIN service;
+    class AUTH_DB,USER_DB,STUDENT_DB,COURSE_DB,ENROLL_DB,GRADE_DB,TUTOR_DB,REPORT_DB,ADMIN_DB data;
+    class REDIS token;
+    class DOCKER,CI_CD deployment;
+```
 
 ---
 
