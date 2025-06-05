@@ -35,6 +35,7 @@ The application currently consists of the following services:
 * **Grade Service**: Handles grading and assessment.
 * **Report Service**: Generates reports/transcripts for students.
 * **Tutor Service**: Manages tutor-related functionality.
+* **Admin Service**: Provides administrative capabilities.
 
 ---
 
@@ -82,8 +83,6 @@ The application currently consists of the following services:
 * **API Gateway**: To be implemented using YARP or Ocelot.
 * **Frontend**: A web app is planned but not yet specified.
 * **Logging and Service Discovery**: To be added in future iterations.
-* **Additional Services**:
-  * **Admin Service**: Will provide administrative capabilities.
 
 ---
 
