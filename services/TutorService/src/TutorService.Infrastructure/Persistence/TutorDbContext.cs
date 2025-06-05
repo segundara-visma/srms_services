@@ -13,6 +13,7 @@ public class TutorDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var assignmentDate = new DateTime(2025, 6, 4, 11, 58, 0, DateTimeKind.Utc);
         modelBuilder.Entity<TutorCourse>()
                 .HasOne(tc => tc.Tutor)
                 .WithMany(t => t.TutorCourses)
@@ -35,14 +36,14 @@ public class TutorDbContext : DbContext
                 Id = Guid.Parse("7c7753bb-90ad-48f6-8260-4fa8ef82322f"),
                 TutorId = tutor1Id,
                 CourseId = course1Id,
-                AssignmentDate = DateTime.UtcNow
+                AssignmentDate = assignmentDate //DateTime.UtcNow
             },
             new TutorCourse
             {
                 Id = Guid.Parse("70466362-d316-4385-a0b5-b5df1eb8b779"),
                 TutorId = tutor1Id,
                 CourseId = course2Id,
-                AssignmentDate = DateTime.UtcNow
+                AssignmentDate = assignmentDate //DateTime.UtcNow
             }
         );
     }

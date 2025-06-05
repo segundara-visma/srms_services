@@ -27,7 +27,7 @@ public class GetAllTutorsTests : BaseTest
         var tutorId = Guid.NewGuid();
         var users = new List<UserDTO>
         {
-            new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "Tutor") // Use primary constructor
+            new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "123", "Tutor") // Use primary constructor
         };
         var tutors = new List<Tutor>
         {

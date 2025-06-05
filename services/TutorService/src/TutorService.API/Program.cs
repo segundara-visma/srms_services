@@ -84,6 +84,32 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
+})
+// Add Auth0 authentication for Auth Service requests
+.AddJwtBearer("Auth0", options =>
+{
+    options.Authority = builder.Configuration["Auth0:Authority"]; // Auth0 authorization server URL
+    options.Audience = builder.Configuration["Auth0:Audience"];  // Auth0 API audience
+    options.RequireHttpsMetadata = true;
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidIssuer = builder.Configuration["Auth0:Authority"], // Auth0 Issuer URL
+        ValidAudience = builder.Configuration["Auth0:Audience"]  // Auth0 API Audience
+    };
+
+    // Optional: Enable logging for Auth0 authentication errors
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("Auth0 Authentication failed: " + context.Exception.Message);
+            return Task.CompletedTask;
+        }
+    };
 });
 
 // Configure Redis cache

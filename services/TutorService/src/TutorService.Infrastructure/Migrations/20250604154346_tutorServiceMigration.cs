@@ -55,8 +55,8 @@ namespace TutorService.Infrastructure.Migrations
                 columns: new[] { "Id", "AssignmentDate", "CourseId", "TutorId" },
                 values: new object[,]
                 {
-                    { new Guid("70466362-d316-4385-a0b5-b5df1eb8b779"), new DateTime(2025, 6, 3, 22, 9, 11, 333, DateTimeKind.Utc).AddTicks(4845), new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"), new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080") },
-                    { new Guid("7c7753bb-90ad-48f6-8260-4fa8ef82322f"), new DateTime(2025, 6, 3, 22, 9, 11, 333, DateTimeKind.Utc).AddTicks(4724), new Guid("6daa15cc-f355-42e7-99aa-9a52086350a7"), new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080") }
+                    { new Guid("70466362-d316-4385-a0b5-b5df1eb8b779"), new DateTime(2025, 6, 4, 11, 58, 0, 0, DateTimeKind.Utc), new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"), new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080") },
+                    { new Guid("7c7753bb-90ad-48f6-8260-4fa8ef82322f"), new DateTime(2025, 6, 4, 11, 58, 0, 0, DateTimeKind.Utc), new Guid("6daa15cc-f355-42e7-99aa-9a52086350a7"), new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080") }
                 });
 
             migrationBuilder.CreateIndex(

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TutorService.Application.DTOs;
 using System;
@@ -10,6 +11,7 @@ using TutorService.Application.Interfaces;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TutorsController : ControllerBase
 {
     private readonly ITutorService _tutorService;
@@ -46,21 +48,6 @@ public class TutorsController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
-    }
-
-    /// <summary>
-    /// Retrieves a list of all tutors in the system.
-    /// </summary>
-    /// <returns>
-    /// An <see cref="IEnumerable{TutorDTO}"/> containing details of all tutors.
-    /// </returns>
-    /// <response code="200">Returns a list of all tutors.</response>
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<TutorDTO>>> GetAllTutorsAsync()
-    {
-        var tutors = await _tutorService.GetAllTutorsAsync();
-        return Ok(tutors);
     }
 
     /// <summary>
@@ -115,36 +102,6 @@ public class TutorsController : ControllerBase
         catch (ArgumentException ex)
         {
             return NotFound(new { message = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Assigns a course to a specific tutor.
-    /// </summary>
-    /// <param name="tutorId">The unique identifier of the tutor to assign the course to.</param>
-    /// <param name="courseId">The unique identifier of the course to assign.</param>
-    /// <returns>
-    /// A 204 No Content response if the assignment is successful, a 400 Bad Request if the tutor is already assigned to the course, or a 404 Not Found if the tutor does not exist.
-    /// </returns>
-    /// <response code="204">If the course was successfully assigned to the tutor.</response>
-    /// <response code="400">If the tutor is already assigned to the course.</response>
-    /// <response code="404">If the tutor with the specified ID is not found.</response>
-    [HttpPost("{tutorId}/courses")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AssignCourseToTutorAsync(
-        [FromRoute] Guid tutorId,
-        [FromQuery] Guid courseId)
-    {
-        try
-        {
-            await _tutorService.AssignCourseToTutorAsync(tutorId, courseId);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
         }
     }
 }

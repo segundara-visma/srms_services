@@ -68,14 +68,14 @@ namespace TutorService.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("7c7753bb-90ad-48f6-8260-4fa8ef82322f"),
-                            AssignmentDate = new DateTime(2025, 6, 3, 22, 9, 11, 333, DateTimeKind.Utc).AddTicks(4724),
+                            AssignmentDate = new DateTime(2025, 6, 4, 11, 58, 0, 0, DateTimeKind.Utc),
                             CourseId = new Guid("6daa15cc-f355-42e7-99aa-9a52086350a7"),
                             TutorId = new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080")
                         },
                         new
                         {
                             Id = new Guid("70466362-d316-4385-a0b5-b5df1eb8b779"),
-                            AssignmentDate = new DateTime(2025, 6, 3, 22, 9, 11, 333, DateTimeKind.Utc).AddTicks(4845),
+                            AssignmentDate = new DateTime(2025, 6, 4, 11, 58, 0, 0, DateTimeKind.Utc),
                             CourseId = new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"),
                             TutorId = new Guid("cdf8756b-1b69-49b3-b89a-a7ac0652b080")
                         });

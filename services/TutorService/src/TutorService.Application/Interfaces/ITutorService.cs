@@ -12,5 +12,6 @@ namespace TutorService.Application.Interfaces
         Task<bool> AssignGradeAsync(Guid studentId, Guid courseId, decimal grade);
         Task<IEnumerable<Guid>> GetAssignedCoursesAsync(Guid tutorId);
         Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId);
+        Task CreateTutorAsync(Guid userId);
     }
 }

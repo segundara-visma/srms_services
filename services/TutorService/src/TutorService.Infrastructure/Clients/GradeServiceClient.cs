@@ -56,7 +56,7 @@ public class GradeServiceClient : IGradeServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
         var payload = new { studentId, courseId, grade };
-        var request = new HttpRequestMessage(HttpMethod.Post, "api/s2s/grade/assign")
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/s2s/grades/assign")
         {
             Content = new StringContent(JsonConvert.SerializeObject(payload), System.Text.Encoding.UTF8, "application/json")
         };

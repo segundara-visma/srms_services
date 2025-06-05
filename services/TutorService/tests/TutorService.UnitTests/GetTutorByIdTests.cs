@@ -25,7 +25,7 @@ public class GetTutorByIdTests : BaseTest
         // Arrange
         var tutorId = Guid.NewGuid();
         var tutor = new Tutor { Id = Guid.NewGuid(), UserId = tutorId };
-        var user = new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "Tutor"); // Use primary constructor
+        var user = new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "123", "Tutor"); // Use primary constructor
         TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(tutor);
         UserServiceClientMock.Setup(c => c.GetUserByIdAsync(tutorId)).ReturnsAsync(user);
 
