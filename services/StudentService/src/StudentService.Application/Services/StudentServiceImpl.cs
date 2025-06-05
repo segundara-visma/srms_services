@@ -47,4 +47,18 @@ public class StudentServiceImpl : IStudentService
 
         return studentDTOs;
     }
+
+    public async Task CreateStudentAsync(Guid userId)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+
+        var existingStudent = await _studentRepository.GetByUserIdAsync(userId);
+        if (existingStudent != null)
+            throw new InvalidOperationException($"Student with User ID {userId} already exists.");
+
+        var student = new Student(userId); // Use the parameterized constructor
+
+        await _studentRepository.AddAsync(student);
+    }
 }

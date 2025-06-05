@@ -140,6 +140,12 @@ builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
     client.BaseAddress = new Uri(builder.Configuration["ServiceSettings:UserServiceBaseUrl"] ?? "http://userservice:8080");
 });
 
+// Register HttpClient with base addresses for CourseService
+builder.Services.AddHttpClient<ICourseServiceClient, CourseServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ServiceSettings:CourseServiceBaseUrl"] ?? "http://courseservice:8080");
+});
+
 // Configure Logging
 builder.Services.AddLogging(logging =>
 {

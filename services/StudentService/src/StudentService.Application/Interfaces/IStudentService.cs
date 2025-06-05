@@ -9,4 +9,5 @@ public interface IStudentService
 {
     Task<StudentDTO> GetStudentByIdAsync(Guid userId);
     Task<IEnumerable<StudentDTO>> GetAllStudentsAsync();
+    Task CreateStudentAsync(Guid userId);
 }

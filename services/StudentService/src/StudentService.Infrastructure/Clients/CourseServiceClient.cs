@@ -57,7 +57,7 @@ public class CourseServiceClient : ICourseServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/{courseId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/courses/{courseId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);
