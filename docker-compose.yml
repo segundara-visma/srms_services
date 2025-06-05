@@ -128,6 +128,19 @@ services:
       - tutordb  # Ensure that the database is started before the Tutor Service
       - migrate_tutorservice
 
+  adminservice:
+    build:
+      context: ./services/AdminService
+      dockerfile: Dockerfile  # Ensure you are using a Dockerfile for build
+    ports:
+      - "5008:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
+      - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+    networks:
+      - backend
+
   authdb:
     image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
     environment:
