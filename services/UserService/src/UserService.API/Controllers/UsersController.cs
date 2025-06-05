@@ -56,36 +56,6 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Register new user.
-    /// </summary>
-    /// <param name="request">Object containing the user's email, password, firstname, lastname and role.</param>
-    /// <returns>A register-response object.</returns>
-    [HttpPost("register")]
-    public async Task<IActionResult> CreateUser([FromBody] RegisterRequest request)
-    {
-        // Hash the password before saving
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-        var user = new User
-        {
-            Email = request.Email,
-            Firstname = request.Firstname,
-            Lastname = request.Lastname,
-            PasswordHash = hashedPassword
-        };
-
-        await _userService.RegisterUser(user, request.Password, request.Role);
-
-        var response = new RegisterResponse
-        {
-            UserId = user.Id,
-            Email = user.Email
-        };
-
-        return Ok(response);
-    }
-
-    /// <summary>
     /// Update existing user.
     /// </summary>
     /// <param name="id">The user's unique identifier.</param>

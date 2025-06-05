@@ -11,7 +11,7 @@ namespace GradeService.API.Controllers;
 /// Controller for handling service-to-service API operations, restricted to Auth0-authenticated requests.
 /// </summary>
 [ApiController]
-[Route("api/s2s/grade")]
+[Route("api/s2s/grades")]
 [Authorize(AuthenticationSchemes = "Auth0")] // Restrict to Auth0-authenticated service requests
 public class ServiceToServiceController : ControllerBase
 {
@@ -67,6 +67,18 @@ public class ServiceToServiceController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Retrieves a list of all grades recorded in the system.
+    /// </summary>
+    /// <returns>A list of <see cref="GradeDTO"/> objects.</returns>
+    /// <response code="200">Returns the list of grades successfully.</response>
+    [HttpGet]
+    public async Task<IActionResult> GetGrades()
+    {
+        var grades = await _gradeService.GetAllGradesAsync();
+        return Ok(grades);
     }
 }
 

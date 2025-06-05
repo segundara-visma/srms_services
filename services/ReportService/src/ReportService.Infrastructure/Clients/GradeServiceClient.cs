@@ -25,7 +25,6 @@ public class GradeServiceClient : IGradeServiceClient
 
         // Create a separate HttpClient for Auth0 token requests
         _auth0HttpClient = new HttpClient();
-        //_httpClient.BaseAddress = new Uri("http://localhost:5005/"); // GradeService URL
     }
 
     // Get OAuth2 token from Auth0
@@ -56,7 +55,7 @@ public class GradeServiceClient : IGradeServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/grade/student/{studentId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/grades/student/{studentId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);

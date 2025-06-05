@@ -11,7 +11,7 @@ namespace EnrollmentService.API.Controllers;
 /// <summary>
 /// Controller for handling service-to-service API operations, restricted to Auth0-authenticated requests.
 /// </summary>
-[Route("api/s2s")]
+[Route("api/s2s/enrollments")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Auth0")] // Restrict to Auth0-authenticated service requests
 public class ServiceToServiceController : ControllerBase
@@ -34,10 +34,22 @@ public class ServiceToServiceController : ControllerBase
     /// <param name="courseId">The unique identifier of the course.</param>
     /// <returns>An <see cref="IActionResult"/> indicating whether the student is enrolled in the course (true/false).</returns>
     /// <response code="200">Returns true if the student is enrolled in the course, false otherwise.</response>
-    [HttpGet("enrollment/check")]
+    [HttpGet("check")]
     public async Task<IActionResult> CheckEnrollment([FromQuery] Guid studentId, [FromQuery] Guid courseId)
     {
         var isEnrolled = await _enrollmentService.CheckEnrollmentAsync(studentId, courseId);
         return Ok(isEnrolled.ToString().ToLower());
+    }
+
+    /// <summary>
+    /// Retrieves a list of all enrollments in the system.
+    /// </summary>
+    /// <returns>A list of <see cref="EnrollmentDTO"/> objects.</returns>
+    /// <response code="200">Returns all enrollments successfully.</response>
+    [HttpGet]
+    public async Task<IActionResult> GetEnrollments()
+    {
+        var enrollments = await _enrollmentService.GetAllEnrollmentsAsync();
+        return Ok(enrollments);
     }
 }

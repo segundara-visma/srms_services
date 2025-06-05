@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Interfaces;
 using UserService.Application.DTOs;
+using UserService.Domain.Entities;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,7 +11,7 @@ namespace UserService.Api.Controllers;
 /// <summary>
 /// Controller for handling service-to-service API operations, restricted to Auth0-authenticated requests.
 /// </summary>
-[Route("api/s2s")]
+[Route("api/s2s/users")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Auth0")] // Restrict to Auth0-authenticated service requests
 public class ServiceToServiceController : ControllerBase
@@ -50,10 +51,11 @@ public class ServiceToServiceController : ControllerBase
                 Email = user.Email,
                 Firstname = user.Firstname,
                 Lastname = user.Lastname,
-                Role = user.Role.ToString()
+                Role = user.Role?.Name ?? "Unknown" // Use Role.Name instead of ToString()
+                //Role = user.Role.ToString()
             };
 
-            Console.WriteLine($"Successfully retrieved user: {response.Email}");
+            Console.WriteLine($"Successfully retrieved user: {response.Email} with role: {response.Role}");
             return Ok(response);
         }
         catch (Exception ex)
@@ -125,5 +127,35 @@ public class ServiceToServiceController : ControllerBase
 
         var users = await _userService.GetUsersByRoleAsync(role);
         return Ok(users);
+    }
+
+    /// <summary>
+    /// Register new user.
+    /// </summary>
+    /// <param name="request">Object containing the user's email, password, firstname, lastname and role.</param>
+    /// <returns>A register-response object.</returns>
+    [HttpPost("register")]
+    public async Task<IActionResult> CreateUser([FromBody] RegisterRequest request)
+    {
+        // Hash the password before saving
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        var user = new User
+        {
+            Email = request.Email,
+            Firstname = request.Firstname,
+            Lastname = request.Lastname,
+            PasswordHash = hashedPassword
+        };
+
+        await _userService.RegisterUser(user, request.Password, request.Role);
+
+        var response = new RegisterResponse
+        {
+            UserId = user.Id,
+            Email = user.Email
+        };
+
+        return Ok(response.UserId);
     }
 }

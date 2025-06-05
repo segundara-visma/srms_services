@@ -57,7 +57,7 @@ public class UserServiceClient : IUserServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/{userId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/{userId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);
@@ -74,7 +74,7 @@ public class UserServiceClient : IUserServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/by-role?role={role}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={role}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);

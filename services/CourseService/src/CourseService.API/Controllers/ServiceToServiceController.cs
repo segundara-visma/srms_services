@@ -11,7 +11,7 @@ namespace CourseService.API.Controllers;
 /// <summary>
 /// Controller for handling service-to-service API operations, restricted to Auth0-authenticated requests.
 /// </summary>
-[Route("api/s2s")]
+[Route("api/s2s/courses")]
 [ApiController]
 [Authorize(AuthenticationSchemes = "Auth0")] // Restrict to Auth0-authenticated service requests
 public class ServiceToServiceController : ControllerBase
@@ -37,5 +37,16 @@ public class ServiceToServiceController : ControllerBase
     {
         var course = await _courseService.GetCourseByIdAsync(id);
         return course != null ? Ok(course) : NotFound();
+    }
+
+    /// <summary>
+    /// Retrieves all courses.
+    /// </summary>
+    /// <returns>A list of all courses.</returns>
+    [HttpGet]
+    public async Task<IActionResult> GetAllCourses()
+    {
+        var courses = await _courseService.GetAllCoursesAsync();
+        return Ok(courses);
     }
 }

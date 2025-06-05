@@ -28,18 +28,6 @@ public class GradeController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a list of all grades recorded in the system.
-    /// </summary>
-    /// <returns>A list of <see cref="GradeDTO"/> objects.</returns>
-    /// <response code="200">Returns the list of grades successfully.</response>
-    [HttpGet]
-    public async Task<IActionResult> GetGrades()
-    {
-        var grades = await _gradeService.GetAllGradesAsync();
-        return Ok(grades);
-    }
-
-    /// <summary>
     /// Retrieves a specific grade by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the grade.</param>

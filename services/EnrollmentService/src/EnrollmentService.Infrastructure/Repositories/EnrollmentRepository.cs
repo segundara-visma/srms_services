@@ -50,4 +50,11 @@ public class EnrollmentRepository : IEnrollmentRepository
         _context.Enrollments.Update(enrollment);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Enrollment>> GetAllAsync()
+    {
+        return await _context.Enrollments
+            .AsNoTracking()
+            .ToListAsync();
+    }
 }

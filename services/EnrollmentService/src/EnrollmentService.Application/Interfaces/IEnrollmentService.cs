@@ -13,4 +13,5 @@ public interface IEnrollmentService
     Task EnrollStudentAsync(Guid studentId, Guid courseId);
     Task CancelEnrollmentAsync(Guid enrollmentId);
     Task<bool> CheckEnrollmentAsync(Guid studentId, Guid courseId);
+    Task<IEnumerable<EnrollmentDTO>> GetAllEnrollmentsAsync();
 }

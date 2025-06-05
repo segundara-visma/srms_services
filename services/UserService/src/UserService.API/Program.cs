@@ -82,6 +82,13 @@ builder.Services.AddAuthentication(options =>
         },
         OnAuthenticationFailed = context =>
         {
+            // Suppress logging if the request will be handled by another scheme (e.g., Auth0)
+            if (context.Request.Path.StartsWithSegments("/api/s2s"))
+            {
+                context.NoResult(); // Skip logging for S2S endpoints
+                return Task.CompletedTask;
+            }
+
             Console.WriteLine("Authentication failed: " + context.Exception.Message);
             return Task.CompletedTask;
         }

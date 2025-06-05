@@ -25,7 +25,6 @@ public class EnrollmentServiceClient : IEnrollmentServiceClient
 
         // Create a separate HttpClient for Auth0 token requests
         _auth0HttpClient = new HttpClient();
-        //_httpClient.BaseAddress = new Uri("http://localhost:5004/"); // EnrollmentService URL
     }
 
     // Get OAuth2 token from Auth0
@@ -56,7 +55,7 @@ public class EnrollmentServiceClient : IEnrollmentServiceClient
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/enrollment/check?studentId={studentId}&courseId={courseId}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/enrollments/check?studentId={studentId}&courseId={courseId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);

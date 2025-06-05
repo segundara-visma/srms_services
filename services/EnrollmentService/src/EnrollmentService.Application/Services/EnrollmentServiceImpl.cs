@@ -118,4 +118,22 @@ public class EnrollmentServiceImpl : IEnrollmentService
         var enrollment = await _enrollmentRepository.GetByStudentAndCourseAsync(studentId, courseId);
         return enrollment != null && enrollment.Status == EnrollmentStatus.Enrolled;
     }
+
+    public async Task<IEnumerable<EnrollmentDTO>> GetAllEnrollmentsAsync()
+    {
+        var enrollments = await _enrollmentRepository.GetAllAsync();
+        return enrollments.Select(MapToDTO);
+    }
+
+    private EnrollmentDTO MapToDTO(Enrollment enrollment)
+    {
+        return new EnrollmentDTO
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            CourseId = enrollment.CourseId,
+            EnrollmentDate = enrollment.EnrollmentDate,
+            Status = enrollment.Status.ToString()
+        };
+    }
 }
