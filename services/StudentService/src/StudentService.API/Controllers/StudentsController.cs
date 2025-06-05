@@ -10,7 +10,6 @@ namespace StudentService.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
@@ -24,6 +23,7 @@ public class StudentsController : ControllerBase
     /// Retrieves a student by their User ID.
     /// </summary>
     [HttpGet("{userId}")]
+    [Authorize]
     public async Task<IActionResult> GetStudentById(Guid userId)
     {
         try
@@ -41,6 +41,7 @@ public class StudentsController : ControllerBase
     /// Retrieves all students.
     /// </summary>
     [HttpGet]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<IActionResult> GetAllStudents()
     {
         var students = await _studentService.GetAllStudentsAsync();

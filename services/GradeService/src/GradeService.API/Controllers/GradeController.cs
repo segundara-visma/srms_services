@@ -13,7 +13,6 @@ namespace GradeService.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class GradeController : ControllerBase
 {
     private readonly IGradeService _gradeService;
@@ -35,6 +34,7 @@ public class GradeController : ControllerBase
     /// <response code="200">Returns the requested grade.</response>
     /// <response code="404">If the grade with the specified ID is not found.</response>
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetGrade(Guid id)
     {
         var grade = await _gradeService.GetGradeByIdAsync(id);
@@ -52,6 +52,7 @@ public class GradeController : ControllerBase
     /// <response code="400">If the grade object is null or invalid.</response>
     /// <response code="409">If the student is not enrolled in the specified course.</response>
     [HttpPost]
+    [Authorize(Policy = "TutorOnly")]
     public async Task<IActionResult> CreateGrade([FromBody] GradeDTO gradeDto)
     {
         if (gradeDto == null) return BadRequest("Grade cannot be null.");

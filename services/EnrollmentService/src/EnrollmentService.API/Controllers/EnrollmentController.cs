@@ -12,7 +12,6 @@ namespace EnrollmentService.API.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class EnrollmentController : ControllerBase
 {
     private readonly IEnrollmentService _enrollmentService;
@@ -33,6 +32,7 @@ public class EnrollmentController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing the <see cref="EnrollmentDTO"/> if found; otherwise, a 404 Not Found response.</returns>
     /// <exception cref="ArgumentException">Thrown when the enrollment with the specified ID is not found.</exception>
     [HttpGet("{id}")]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<IActionResult> GetEnrollmentById(Guid id)
     {
         var enrollment = await _enrollmentService.GetEnrollmentByIdAsync(id);
@@ -46,6 +46,7 @@ public class EnrollmentController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing a list of <see cref="EnrollmentDTO"/> objects representing the student's enrollments.</returns>
     /// <exception cref="ArgumentException">Thrown when the user is not found or is not a student.</exception>
     [HttpGet("student/{userId}")]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<IActionResult> GetEnrollmentsByStudent(Guid userId)
     {
         var enrollments = await _enrollmentService.GetEnrollmentsByStudentAsync(userId);
@@ -59,6 +60,7 @@ public class EnrollmentController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> containing a list of <see cref="EnrollmentDTO"/> objects representing the enrollments in the course.</returns>
     /// <exception cref="ArgumentException">Thrown when the course is not found.</exception>
     [HttpGet("course/{courseId}")]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<IActionResult> GetEnrollmentsByCourse(Guid courseId)
     {
         var enrollments = await _enrollmentService.GetEnrollmentsByCourseAsync(courseId);
@@ -72,6 +74,7 @@ public class EnrollmentController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating success with a 200 OK response.</returns>
     /// <exception cref="ArgumentException">Thrown when the student or course is not found.</exception>
     [HttpPost("enroll")]
+    [Authorize]
     public async Task<IActionResult> EnrollStudent([FromBody] EnrollmentRequest request)
     {
         await _enrollmentService.EnrollStudentAsync(request.StudentId, request.CourseId);
@@ -85,6 +88,7 @@ public class EnrollmentController : ControllerBase
     /// <returns>An <see cref="IActionResult"/> indicating success with a 200 OK response.</returns>
     /// <exception cref="ArgumentException">Thrown when the enrollment with the specified ID is not found.</exception>
     [HttpPost("cancel/{id}")]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<IActionResult> CancelEnrollment(Guid id)
     {
         await _enrollmentService.CancelEnrollmentAsync(id);

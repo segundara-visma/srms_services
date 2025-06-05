@@ -11,7 +11,6 @@ using TutorService.Application.Interfaces;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class TutorsController : ControllerBase
 {
     private readonly ITutorService _tutorService;
@@ -37,6 +36,7 @@ public class TutorsController : ControllerBase
     [HttpGet("{tutorId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<ActionResult<TutorDTO>> GetTutorByIdAsync([FromRoute] Guid tutorId)
     {
         try
@@ -64,6 +64,7 @@ public class TutorsController : ControllerBase
     [HttpPost("grades")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = "TutorOnly")]
     public async Task<ActionResult<bool>> AssignGradeAsync(
         [FromQuery] Guid studentId,
         [FromQuery] Guid courseId,
@@ -92,6 +93,7 @@ public class TutorsController : ControllerBase
     [HttpGet("{tutorId}/courses")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
     public async Task<ActionResult<IEnumerable<Guid>>> GetAssignedCoursesAsync([FromRoute] Guid tutorId)
     {
         try

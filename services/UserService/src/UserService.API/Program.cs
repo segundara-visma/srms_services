@@ -21,14 +21,18 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    // Disable automatic claim type mapping
+    // so as to avoid "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" for RoleClaimType
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],  // Get issuer from appsettings
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],  // Get audience from appsettings
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))  // Secret Key from appsettings
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"])),
+        RoleClaimType = "role"
     };
 
     // Optional: Enable logging for token validation errors
@@ -132,6 +136,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("TutorOnly", policy => policy.RequireRole("Tutor"));
+    options.AddPolicy("AdminOrTutor", policy => policy.RequireRole("Admin", "Tutor"));
 });
 
 builder.Services.AddCors(options =>

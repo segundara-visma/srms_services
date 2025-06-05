@@ -12,7 +12,6 @@ namespace ReportService.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class ReportController : ControllerBase
 {
     private readonly IReportService _reportService;
@@ -37,6 +36,7 @@ public class ReportController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize]
     public async Task<IActionResult> GetReportById(Guid id)
     {
         var report = await _reportService.GetReportByIdAsync(id);
@@ -54,6 +54,7 @@ public class ReportController : ControllerBase
     [HttpGet("student/{studentId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize]
     public async Task<IActionResult> GetReportByStudentId(Guid studentId)
     {
         var report = await _reportService.GetReportByStudentIdAsync(studentId);
@@ -73,6 +74,7 @@ public class ReportController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Authorize(Policy = "TutorOnly")]
     public async Task<IActionResult> GenerateReport(Guid studentId)
     {
         try
