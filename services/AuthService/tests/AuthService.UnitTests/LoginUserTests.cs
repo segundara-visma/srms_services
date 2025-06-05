@@ -30,8 +30,10 @@ namespace AuthService.UnitTests
 
             _userServiceMock.Setup(repo => repo.GetUserByEmailAsync(validEmail)).ReturnsAsync(user);
             _userServiceMock.Setup(repo => repo.ValidatePasswordAsync(user.Id, validPassword)).ReturnsAsync(true);
-            _jwtTokenHelperMock.Setup(helper => helper.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>())).Returns("fake-access-token");
-            _jwtTokenHelperMock.Setup(helper => helper.GenerateRefreshToken(It.IsAny<Guid>(), It.IsAny<string>())).Returns("fake-refresh-token");
+            _jwtTokenHelperMock.Setup(helper => helper.GenerateAccessToken(user.Id, user.Email, user.Role)) // Include userRole
+                .Returns("fake-access-token");
+            _jwtTokenHelperMock.Setup(helper => helper.GenerateRefreshToken(user.Id, user.Email))
+                .Returns("fake-refresh-token");
 
             var responseMock = SetupHttpContextForCookies();
 
@@ -40,7 +42,7 @@ namespace AuthService.UnitTests
             result.Should().NotBeNull();
             result.Token.Should().NotBeNullOrEmpty();
 
-            _jwtTokenHelperMock.Verify(helper => helper.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>()), Times.Once);
+            _jwtTokenHelperMock.Verify(helper => helper.GenerateAccessToken(user.Id, user.Email, user.Role), Times.Once); // Verify with userRole
             responseMock.Verify(r => r.Cookies.Append("RefreshToken", It.IsAny<string>(), It.IsAny<CookieOptions>()), Times.Once);
         }
 
@@ -80,11 +82,9 @@ namespace AuthService.UnitTests
         [Fact]
         public async Task LoginUser_Should_Throw_Exception_When_Email_Or_Password_Is_Empty()
         {
-            // Arrange
             var emptyEmail = "";
             var emptyPassword = "";
 
-            // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentException>(() => _authService.LoginUser(emptyEmail, emptyPassword));
             Assert.Equal("Email and password cannot be empty.", exception.Message);
         }
