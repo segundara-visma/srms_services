@@ -116,7 +116,7 @@ public class AuthServices : IAuthService
         }
 
         // Generate both Access Token and Refresh Token
-        var accessToken = _jwtTokenHelper.GenerateAccessToken(user.Id, email);
+        var accessToken = _jwtTokenHelper.GenerateAccessToken(user.Id, email, user.Role);
         var refreshToken = _jwtTokenHelper.GenerateRefreshToken(user.Id, email);
 
         // Save the refresh token to the database or a secure store for later validation
@@ -167,7 +167,7 @@ public class AuthServices : IAuthService
         }
 
         // Generate a new access token and refresh token
-        var newAccessToken = _jwtTokenHelper.GenerateAccessToken(user.Id, email);
+        var newAccessToken = _jwtTokenHelper.GenerateAccessToken(user.Id, email, user.Role);
         var newRefreshToken = _jwtTokenHelper.GenerateRefreshToken(user.Id, email);
 
         // Save the new refresh token securely (optional step)

@@ -51,7 +51,7 @@ namespace AuthService.Application.Services
         {
             var accessToken = await GetAuth0OAuth2TokenAsync();  // Get the OAuth2 token from Okta
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/s2s/by-email/{email}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/s2s/users/by-email/{email}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             var response = await _httpClient.SendAsync(request);
@@ -68,7 +68,7 @@ namespace AuthService.Application.Services
         {
             var accessToken = await GetAuth0OAuth2TokenAsync();  // Get the OAuth2 token from Okta
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/s2s/by-password/{userId}/{password}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/s2s/users/by-password/{userId}/{password}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             var response = await _httpClient.SendAsync(request);

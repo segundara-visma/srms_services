@@ -22,12 +22,13 @@ public class JWTTokenHelper
     }
 
     // Generate Access Token
-    public virtual string GenerateAccessToken(Guid userId, string userEmail)
+    public virtual string GenerateAccessToken(Guid userId, string userEmail, string userRole)
     {
         var claims = new[]
         {
         new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
         new Claim(ClaimTypes.Email, userEmail),
+        new Claim("role", userRole),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())  // Add jti claim
     };
 
