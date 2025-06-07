@@ -36,7 +36,6 @@ graph TD
     subgraph CICD["<b>CI/CD Pipeline</b><br/>(GitHub Actions)"]
         subgraph DockerHost["<b>Docker Host</b>"]
             gateway["🛡️ <b>API Gateway</b><br/>(Ocelot)"]:::gateway
-            click gateway callback "API Gateway routes requests to appropriate services"
 
             %% Core Services
             subgraph CoreServices["🧩 <b>Core Services</b>"]
@@ -47,7 +46,6 @@ graph TD
                     
                     %% 0) connection between auth and auth_db - purple
                     auth <--> auth_db
-                    click auth callback "Handles user authentication and token issuance"
                 end
 
                 subgraph UserGroup["👥 <b>User</b>"]
@@ -56,7 +54,6 @@ graph TD
                     
                     %% 1) connection between user and user_db - purple
                     user <--> user_db
-                    click user callback "Manages user profiles and roles"
                 end
 
                 subgraph StudentGroup["🎓 <b>Student</b>"]
@@ -65,7 +62,6 @@ graph TD
                     
                     %% 2) connection between student and student_db - purple
                     student <--> student_db
-                    click student callback "Handles student record management"
                 end
 
                 subgraph CourseGroup["📚 <b>Course</b>"]
@@ -74,7 +70,6 @@ graph TD
                     
                     %% 3) connection between course and course_db - purple
                     course <--> course_db
-                    click course callback "Manages course information"
                 end
 
                 subgraph EnrollmentGroup["📝 <b>Enrollment</b>"]
@@ -83,7 +78,6 @@ graph TD
                     
                     %% 4) connection between enrollment and enrollment_db - purple
                     enrollment <--> enrollment_db
-                    click enrollment callback "Links users to courses"
                 end
 
                 subgraph GradeGroup["🏷️ <b>Grade</b>"]
@@ -92,7 +86,6 @@ graph TD
                     
                     %% 5) connection between grade and grade_db - purple
                     grade <--> grade_db
-                    click grade callback "Stores and processes exam results"
                 end
 
                 subgraph ReportGroup["📊 <b>Report</b>"]
@@ -101,7 +94,6 @@ graph TD
                     
                     %% 6) connection between report and report_db - purple
                     report <--> report_db
-                    click report callback "Generates student performance reports"
                 end
 
                 subgraph TutorGroup["🧑‍🏫 <b>Tutor</b>"]
@@ -110,12 +102,10 @@ graph TD
                     
                     %% 7) connection between tutor and tutor_db - purple
                     tutor <--> tutor_db
-                    click tutor callback "Handles tutor profiles and actions"
                 end
 
                 subgraph AdminGroup["🛠️ <b>Admin</b>"]
                     admin["<b>Admin Service</b>"]:::service
-                    click admin callback "Administers system users and entities"
                 end
             end
         end
@@ -124,15 +114,12 @@ graph TD
     %% External Clients
     subgraph Client["<b>Client</b>"]
         frontend(["🌐 <b>Client App</b>"]):::client
-        click frontend callback "Frontend for user interaction (students, tutors, admins)"
     end
 
     %% Infra components
     auth0["🔐 <b>Auth0</b><br/>(Internal Auth)"]:::infra
-    click auth0 callback "Internal OAuth2 provider for service-to-service auth"
 
     redis["⚡ <b>Redis Cache</b><br/>(Token Blacklist)"]:::infra
-    click redis callback "Token validation and revocation via Redis"
 
     %% Group Styling
     class AuthGroup,UserGroup,StudentGroup,CourseGroup,EnrollmentGroup,GradeGroup,ReportGroup,TutorGroup,AdminGroup serviceGroup;
