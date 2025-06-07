@@ -26,11 +26,15 @@ graph TD
 
     %% Class Definitions
     classDef service fill:#E8F4FA,stroke:#036,stroke-width:2px;
-    classDef db fill:#FDEBD0,stroke:#8B4513,stroke-width:2px;
+    classDef db fill:#9FFFFF,stroke:#0FFFFF,stroke-width:2px;
     classDef infra fill:#D5F5E3,stroke:#1E8449,stroke-width:2px;
     classDef serviceGroup fill:#FFFACD,stroke:#333,stroke-width:1px;
     classDef client fill:#F3E8FF,stroke:#5A2C91,stroke-width:2px;
-    classDef gateway fill:#FFF8DC,stroke:#DAA520,stroke-width:3px;
+    classDef gateway fill:#FFF8AC,stroke:#DAA520,stroke-width:3px;
+
+    classDef ciStyle fill:#D2E3F3,stroke:#1B4F72,stroke-width:2px;
+    classDef dockerStyle fill:#FCFCCC,stroke:#B7950B,stroke-width:2px;
+    classDef coreStyle fill:#FFFFFF,stroke:#FFFF0F,stroke-width:2px;
 
     %% CI/CD Layer
     subgraph CICD["<b>CI/CD Pipeline</b><br/>(GitHub Actions)"]
@@ -123,6 +127,11 @@ graph TD
 
     %% Group Styling
     class AuthGroup,UserGroup,StudentGroup,CourseGroup,EnrollmentGroup,GradeGroup,ReportGroup,TutorGroup,AdminGroup serviceGroup;
+
+    %% Styles for CICD, DockerHost and CoreServices
+    class CICD ciStyle
+    class DockerHost dockerStyle
+    class CoreServices coreStyle
 
     %% 8) connection between client and gateway - red
     frontend <-->|HTTP| gateway
