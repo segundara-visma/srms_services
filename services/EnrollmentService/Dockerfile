@@ -36,8 +36,12 @@ WORKDIR /app
 # Copy the published application from the build stage
 COPY --from=build /out .
 
-# Expose the port your API is running on
-EXPOSE 8080
+# Expose the port matching ocelot.json (5002 for UserService)
+EXPOSE 5005
+
+# Ensure the app listens on the correct port
+ENV ASPNETCORE_URLS=http://+:5005
+ENV ASPNETCORE_ENVIRONMENT=Development
 
 # Define the entrypoint for the container to run the application
 ENTRYPOINT ["dotnet", "EnrollmentService.API.dll"]

@@ -37,7 +37,11 @@ WORKDIR /app
 COPY --from=build /out .
 
 # Expose the port your API is running on
-EXPOSE 8080
+EXPOSE 5009
+
+# Ensure the app listens on the correct port
+ENV ASPNETCORE_URLS=http://+:5009
+ENV ASPNETCORE_ENVIRONMENT=Development
 
 # Define the entrypoint for the container to run the application
 ENTRYPOINT ["dotnet", "AdminService.API.dll"]

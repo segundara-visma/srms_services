@@ -1,0 +1,9 @@
+bin/
+obj/
+*.csproj.user
+*.sln
+*.swp
+*.tmp
+*.log
+Dockerfile
+.dockerignore

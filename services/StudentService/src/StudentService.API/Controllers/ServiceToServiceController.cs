@@ -47,6 +47,11 @@ public class ServiceToServiceStudentsController : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating student: {ex.Message}");
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
     }
 
     /// <summary>

@@ -69,7 +69,8 @@ public class AdminsController : ControllerBase
         try
         {
             var userId = await _adminService.CreateUserAsync(request.FirstName, request.LastName, request.Email, request.Password, request.Role);
-            return CreatedAtAction(nameof(CreateUserAsync), new { id = userId }, userId);
+            //return CreatedAtAction(nameof(CreateUserAsync), new { id = userId }, userId);
+            return Created(userId.ToString(), userId); // Returns 201 with the userId in the body
         }
         catch (ArgumentException ex)
         {

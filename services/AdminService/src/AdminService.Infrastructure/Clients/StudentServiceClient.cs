@@ -65,7 +65,8 @@ public class StudentServiceClient : IStudentServiceClient
         var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception($"Failed to create student: {response.StatusCode}");
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to create student: {response.StatusCode}, Details: {errorContent}");
         }
     }
 }
