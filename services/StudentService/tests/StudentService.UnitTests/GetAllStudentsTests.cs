@@ -18,7 +18,8 @@ public class GetAllStudentsTests : BaseTest
         var userId2 = Guid.NewGuid();
         var student1 = CreateTestStudent(userId: userId1);
         var student2 = CreateTestStudent(userId: userId2);
-        var userDTO1 = CreateTestUserDTO(userId1);
+        var profile = new Profile { Address = "123 Main St", Phone = "555-0123" };
+        var userDTO1 = CreateTestUserDTO(userId1, profile);
         var userDTO2 = CreateTestUserDTO(userId2);
 
         var users = new List<UserDTO> { userDTO1, userDTO2 };
@@ -32,8 +33,8 @@ public class GetAllStudentsTests : BaseTest
         // Assert
         var resultList = result.ToList();
         Assert.Equal(2, resultList.Count);
-        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id);
-        Assert.Contains(resultList, s => s.UserId == userId2 && s.Id == student2.Id);
+        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id && s.Profile?.Address == profile.Address);
+        Assert.Contains(resultList, s => s.UserId == userId2 && s.Id == student2.Id && s.Profile == null);
     }
 
     [Fact]
@@ -56,8 +57,9 @@ public class GetAllStudentsTests : BaseTest
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         var student1 = CreateTestStudent(userId: userId1);
-        var userDTO1 = CreateTestUserDTO(userId1);
-        var userDTO2 = new UserDTO(userId2, "Jane", "Doe", "jane.doe@example.com", "Student");
+        var profile = new Profile { Address = "123 Main St" };
+        var userDTO1 = CreateTestUserDTO(userId1, profile);
+        var userDTO2 = CreateTestUserDTO(userId2);
 
         var users = new List<UserDTO> { userDTO1, userDTO2 };
         MockGetUsersByRoleAsync("Student", users);
@@ -70,6 +72,6 @@ public class GetAllStudentsTests : BaseTest
         // Assert
         var resultList = result.ToList();
         Assert.Single(resultList);
-        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id);
+        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id && s.Profile?.Address == profile.Address);
     }
 }

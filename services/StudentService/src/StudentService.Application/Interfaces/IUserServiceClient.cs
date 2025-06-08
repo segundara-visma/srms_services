@@ -9,4 +9,5 @@ public interface IUserServiceClient
 {
     Task<UserDTO> GetUserByIdAsync(Guid userId);
     Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role);
+    Task<UserDTO> UpdateUserAsync(Guid userId, UpdateRequest request);
 }

@@ -28,7 +28,37 @@ public class StudentServiceImpl : IStudentService
         if (user == null || user.Role != "Student")
             throw new ArgumentException($"User with ID {userId} is not a student.");
 
-        return new StudentDTO(student.Id, user.Id, user.FirstName, user.LastName, user.Email);
+        return new StudentDTO(student.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile);
+    }
+
+    public async Task<StudentDTO> UpdateStudentAsync(Guid userId, UpdateRequest request)
+    {
+        var student = await _studentRepository.GetByUserIdAsync(userId);
+        if (student == null)
+            throw new ArgumentException($"Student with User ID {userId} not found.");
+
+        var user = await _userServiceClient.UpdateUserAsync(userId, request);
+        if (user == null)
+            throw new ArgumentException($"Update request failed.");
+
+        var profile = new Profile
+        {
+            Address = request.Address,
+            Phone = request.Phone,
+            City = request.City,
+            State = request.State,
+            ZipCode = request.ZipCode,
+            Country = request.Country,
+            Nationality = request.Nationality,
+            Bio = request.Bio,
+            FacebookUrl = request.FacebookUrl,
+            TwitterUrl = request.TwitterUrl,
+            LinkedInUrl = request.LinkedInUrl,
+            InstagramUrl = request.InstagramUrl,
+            WebsiteUrl = request.WebsiteUrl
+        };
+
+        return new StudentDTO(student.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, profile);
     }
 
     public async Task<IEnumerable<StudentDTO>> GetAllStudentsAsync()
@@ -41,7 +71,7 @@ public class StudentServiceImpl : IStudentService
             var student = await _studentRepository.GetByUserIdAsync(user.Id);
             if (student != null)
             {
-                studentDTOs.Add(new StudentDTO(student.Id, user.Id, user.FirstName, user.LastName, user.Email));
+                studentDTOs.Add(new StudentDTO(student.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile));
             }
         }
 

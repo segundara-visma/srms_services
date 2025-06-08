@@ -30,9 +30,15 @@ public abstract class BaseTest
         };
     }
 
-    protected UserDTO CreateTestUserDTO(Guid userId)
+    protected UserDTO CreateTestUserDTO(Guid userId, Profile? profile = null)
     {
-        return new UserDTO(userId, "John", "Doe", "john.doe@example.com", "Student");
+        return new UserDTO(userId, "John", "Doe", "john.doe@example.com", "Student", profile);
+    }
+
+    protected UpdateRequest CreateTestUpdateRequest(Guid id, string? address = null, string? phone = null)
+    {
+        return new UpdateRequest(id, "Jane", "Doe", "jane.doe@example.com",
+            address, phone, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     protected void MockGetUserByIdAsync(Guid userId, UserDTO userDTO)
@@ -53,5 +59,10 @@ public abstract class BaseTest
     protected void MockGetStudentByUserIdAsync(Guid userId, Student student)
     {
         _studentRepositoryMock.Setup(repo => repo.GetByUserIdAsync(userId)).ReturnsAsync(student);
+    }
+
+    protected void MockUpdateUserAsync(Guid userId, UpdateRequest request, UserDTO userDTO)
+    {
+        _userServiceClientMock.Setup(client => client.UpdateUserAsync(userId, request)).ReturnsAsync(userDTO);
     }
 }
