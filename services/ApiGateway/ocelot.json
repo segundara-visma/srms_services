@@ -1,6 +1,57 @@
 {
     "Routes": [
         {
+            "DownstreamPathTemplate": "/api/students/me",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "studentservice",
+                    "Port": 5004
+                }
+            ],
+            "UpstreamPathTemplate": "/api/students/me",
+            "UpstreamHttpMethod": [ "GET", "PUT" ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "JwtBearer",
+                "AllowedScopes": []
+            },
+            "RouteClaimsRequirement": { "role": "Student" }
+        },
+        {
+            "DownstreamPathTemplate": "/api/tutors/me",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "tutorservice",
+                    "Port": 5008
+                }
+            ],
+            "UpstreamPathTemplate": "/api/tutors/me",
+            "UpstreamHttpMethod": [ "GET", "PUT" ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "JwtBearer",
+                "AllowedScopes": []
+            },
+            "RouteClaimsRequirement": { "role": "Tutor" }
+        },
+        {
+            "DownstreamPathTemplate": "/api/admins/me",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "adminservice",
+                    "Port": 5009
+                }
+            ],
+            "UpstreamPathTemplate": "/api/admins/me",
+            "UpstreamHttpMethod": [ "GET", "PUT" ],
+            "AuthenticationOptions": {
+                "AuthenticationProviderKey": "JwtBearer",
+                "AllowedScopes": []
+            },
+            "RouteClaimsRequirement": { "role": "Admin" }
+        },
+        {
             "DownstreamPathTemplate": "/api/auth/{everything}",
             "DownstreamScheme": "http",
             "DownstreamHostAndPorts": [
