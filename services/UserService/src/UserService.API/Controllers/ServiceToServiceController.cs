@@ -86,7 +86,7 @@ public class ServiceToServiceController : ControllerBase
     }
 
     /// <summary>
-    /// StudentService requests to get a user by their unique identifier.
+    /// Requests to get a user by their unique identifier.
     /// </summary>
     /// <param name="userid">The user's unique identifier.</param>
     /// <returns>A user object.</returns>
@@ -157,5 +157,25 @@ public class ServiceToServiceController : ControllerBase
         };
 
         return Ok(response.UserId);
+    }
+
+    /// <summary>
+    /// Update existing user.
+    /// </summary>
+    /// <param name="id">The user's unique identifier.</param>
+    /// <param name="request">Object containing the user's details: email, firstname, lastname and profile data.</param>
+    /// <returns>An update-user-response object.</returns>
+    [HttpPut("{id}")]
+    [Authorize]  // Validate the credentials before going ahead to process the request
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequest request)
+    {
+        if (id != request.Id)
+        {
+            return BadRequest("User ID mismatch");
+        }
+
+        var response = await _userService.UpdateAsync(id, request);
+
+        return Ok(response);
     }
 }
