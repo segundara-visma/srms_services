@@ -7,6 +7,8 @@ namespace AdminService.Application.Interfaces;
 
 public interface IUserServiceClient
 {
-    Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role);
+    Task<IEnumerable<AdminDTO>> GetUsersByRoleAsync(string role);
     Task<Guid> CreateUserAsync(UserDTO user);
+    Task<AdminDTO> UpdateUserAsync(Guid userId, UpdateRequest request);
+    Task<AdminDTO> GetUserByIdAsync(Guid userId);
 }

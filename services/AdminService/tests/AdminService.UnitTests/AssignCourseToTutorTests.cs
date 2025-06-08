@@ -26,26 +26,30 @@ public class AssignCourseToTutorTests : BaseTest
     [Fact]
     public async Task AssignCourseToTutorAsync_WhenValidInput_AssignsCourse()
     {
-        // Arrange
         var tutorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        TutorServiceClientMock.Setup(c => c.AssignCourseToTutorAsync(tutorId, courseId)).Returns(Task.CompletedTask);
+        MockAssignCourseToTutorAsync(tutorId, courseId);
 
-        // Act
         await _adminService.AssignCourseToTutorAsync(tutorId, courseId);
 
-        // Assert
         TutorServiceClientMock.Verify(c => c.AssignCourseToTutorAsync(tutorId, courseId), Times.Once());
     }
 
     [Fact]
     public async Task AssignCourseToTutorAsync_WhenInvalidTutorId_ThrowsArgumentException()
     {
-        // Arrange
         var tutorId = Guid.Empty;
         var courseId = Guid.NewGuid();
 
-        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _adminService.AssignCourseToTutorAsync(tutorId, courseId));
+    }
+
+    [Fact]
+    public async Task AssignCourseToTutorAsync_WhenInvalidCourseId_ThrowsArgumentException()
+    {
+        var tutorId = Guid.NewGuid();
+        var courseId = Guid.Empty;
+
         await Assert.ThrowsAsync<ArgumentException>(() => _adminService.AssignCourseToTutorAsync(tutorId, courseId));
     }
 }

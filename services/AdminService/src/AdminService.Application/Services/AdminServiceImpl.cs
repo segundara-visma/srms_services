@@ -32,7 +32,7 @@ public class AdminServiceImpl : IAdminService
         _enrollmentServiceClient = enrollmentServiceClient ?? throw new ArgumentNullException(nameof(enrollmentServiceClient));
     }
 
-    public async Task<IEnumerable<UserDTO>> GetAllUsersByRoleAsync(string role)
+    public async Task<IEnumerable<AdminDTO>> GetAllUsersByRoleAsync(string role)
     {
         if (string.IsNullOrWhiteSpace(role))
             throw new ArgumentException("Role cannot be empty.", nameof(role));
@@ -104,5 +104,40 @@ public class AdminServiceImpl : IAdminService
             throw new ArgumentException("Course ID cannot be empty.", nameof(courseId));
 
         await _tutorServiceClient.AssignCourseToTutorAsync(tutorId, courseId);
+    }
+
+    public async Task<AdminDTO> GetAdminByIdAsync(Guid userId)
+    {
+        var user = await _userServiceClient.GetUserByIdAsync(userId);
+        if (user == null || user.Role != "Admin")
+            throw new ArgumentException($"User with ID {userId} is not an admin.");
+
+        return new AdminDTO(user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile);
+    }
+
+    public async Task<AdminDTO> UpdateAdminAsync(Guid userId, UpdateRequest request)
+    {
+        var user = await _userServiceClient.UpdateUserAsync(userId, request);
+        if (user == null)
+            throw new ArgumentException($"Update request failed.");
+
+        var profile = new Profile
+        {
+            Address = request.Address,
+            Phone = request.Phone,
+            City = request.City,
+            State = request.State,
+            ZipCode = request.ZipCode,
+            Country = request.Country,
+            Nationality = request.Nationality,
+            Bio = request.Bio,
+            FacebookUrl = request.FacebookUrl,
+            TwitterUrl = request.TwitterUrl,
+            LinkedInUrl = request.LinkedInUrl,
+            InstagramUrl = request.InstagramUrl,
+            WebsiteUrl = request.WebsiteUrl
+        };
+
+        return new AdminDTO(user.Id, user.FirstName, user.LastName, user.Email, user.Role, profile);
     }
 }

@@ -27,44 +27,74 @@ public class CreateUserTests : BaseTest
     [Fact]
     public async Task CreateUserAsync_WhenValidInput_CreatesTutor()
     {
-        // Arrange
         var firstName = "John";
         var lastName = "Doe";
         var email = "john.doe@example.com";
         var role = "Tutor";
         var password = "123";
         var userId = Guid.NewGuid();
-        UserServiceClientMock.Setup(c => c.CreateUserAsync(It.IsAny<UserDTO>())).ReturnsAsync(userId);
-        TutorServiceClientMock.Setup(c => c.CreateTutorAsync(userId)).Returns(Task.CompletedTask);
+        var userDTO = new UserDTO(Guid.NewGuid(), firstName, lastName, email, password, role); // Match input parameters
+        MockCreateUserAsync(userDTO, userId);
+        MockTutorCreateAsync(userId);
 
-        // Act
         var result = await _adminService.CreateUserAsync(firstName, lastName, email, password, role);
 
-        // Assert
         result.Should().Be(userId);
-        UserServiceClientMock.Verify(c => c.CreateUserAsync(It.Is<UserDTO>(u => u.Email == email && u.Role == role)), Times.Once());
+        UserServiceClientMock.Verify(c => c.CreateUserAsync(It.Is<UserDTO>(u =>
+            u.FirstName == firstName &&
+            u.LastName == lastName &&
+            u.Email == email &&
+            u.Password == password &&
+            u.Role == role)), Times.Once());
         TutorServiceClientMock.Verify(c => c.CreateTutorAsync(userId), Times.Once());
     }
 
     [Fact]
     public async Task CreateUserAsync_WhenValidInput_CreatesStudent()
     {
-        // Arrange
         var firstName = "Jane";
         var lastName = "Doe";
         var email = "jane.doe@example.com";
         var role = "Student";
         var password = "123";
         var userId = Guid.NewGuid();
-        UserServiceClientMock.Setup(c => c.CreateUserAsync(It.IsAny<UserDTO>())).ReturnsAsync(userId);
-        StudentServiceClientMock.Setup(c => c.CreateStudentAsync(userId)).Returns(Task.CompletedTask);
+        var userDTO = new UserDTO(Guid.NewGuid(), firstName, lastName, email, password, role); // Match input parameters
+        MockCreateUserAsync(userDTO, userId);
+        MockStudentCreateAsync(userId);
 
-        // Act
         var result = await _adminService.CreateUserAsync(firstName, lastName, email, password, role);
 
-        // Assert
         result.Should().Be(userId);
-        UserServiceClientMock.Verify(c => c.CreateUserAsync(It.Is<UserDTO>(u => u.Email == email && u.Role == role)), Times.Once());
+        UserServiceClientMock.Verify(c => c.CreateUserAsync(It.Is<UserDTO>(u =>
+            u.FirstName == firstName &&
+            u.LastName == lastName &&
+            u.Email == email &&
+            u.Password == password &&
+            u.Role == role)), Times.Once());
         StudentServiceClientMock.Verify(c => c.CreateStudentAsync(userId), Times.Once());
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_WhenEmptyFirstName_ThrowsArgumentException()
+    {
+        var firstName = "";
+        var lastName = "Doe";
+        var email = "john.doe@example.com";
+        var role = "Tutor";
+        var password = "123";
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _adminService.CreateUserAsync(firstName, lastName, email, password, role));
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_WhenEmptyRole_ThrowsArgumentException()
+    {
+        var firstName = "John";
+        var lastName = "Doe";
+        var email = "john.doe@example.com";
+        var role = "";
+        var password = "123";
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _adminService.CreateUserAsync(firstName, lastName, email, password, role));
     }
 }

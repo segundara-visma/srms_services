@@ -5,6 +5,7 @@ using AdminService.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Security.Claims; // Added to resolve ClaimTypes
 
 namespace AdminService.API.Controllers;
 
@@ -71,6 +72,62 @@ public class AdminsController : ControllerBase
             var userId = await _adminService.CreateUserAsync(request.FirstName, request.LastName, request.Email, request.Password, request.Role);
             //return CreatedAtAction(nameof(CreateUserAsync), new { id = userId }, userId);
             return Created(userId.ToString(), userId); // Returns 201 with the userId in the body
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the currently signed-in admin.
+    /// </summary>
+    /// <returns>
+    /// An object containing the admin's details if found, or a 401 Not authorized.
+    /// </returns>
+    /// <response code="200">Returns the admin details.</response>
+    /// <response code="401">If the request is not authorized.</response>
+    [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMe()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            var admin = await _adminService.GetAdminByIdAsync(Guid.Parse(userId));
+            return Ok(admin);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Updates the currently signed-in admin.
+    /// </summary>
+    /// <returns>
+    /// A 204 No Content response if the assignment is successful, a 400 Bad Request, or a 401 Not Authorize.
+    /// </returns>
+    /// <response code="204">Returns No Content response.</response>
+    /// <response code="401">If the request is not authorized.</response>
+    [HttpPut("me")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequest dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            dto = dto with { Id = Guid.Parse(userId) }; // Set Id from token
+            await _adminService.UpdateAdminAsync(Guid.Parse(userId), dto);
+            return NoContent();
         }
         catch (ArgumentException ex)
         {

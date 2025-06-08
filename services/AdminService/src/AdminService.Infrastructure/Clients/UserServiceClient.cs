@@ -69,7 +69,7 @@ public class UserServiceClient : IUserServiceClient
         throw new Exception($"Failed to create user: {response.StatusCode}");
     }
 
-    public async Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role)
+    public async Task<IEnumerable<AdminDTO>> GetUsersByRoleAsync(string role)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
@@ -80,9 +80,44 @@ public class UserServiceClient : IUserServiceClient
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<UserDTO>>();
+            return await response.Content.ReadFromJsonAsync<IEnumerable<AdminDTO>>();
         }
 
         return null;
+    }
+
+    // Method to make requests to the UserService using the token
+    public async Task<AdminDTO> GetUserByIdAsync(Guid userId)
+    {
+        var accessToken = await GetAuth0OAuth2TokenAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/{userId}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<AdminDTO>();
+        }
+
+        return null;
+    }
+
+    public async Task<AdminDTO> UpdateUserAsync(Guid userId, UpdateRequest user)
+    {
+        var accessToken = await GetAuth0OAuth2TokenAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Put, $"api/s2s/users/{userId}")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(user), System.Text.Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        var response = await _httpClient.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<AdminDTO>();
+        }
+        throw new Exception($"Failed to update user: {response.StatusCode}");
     }
 }
