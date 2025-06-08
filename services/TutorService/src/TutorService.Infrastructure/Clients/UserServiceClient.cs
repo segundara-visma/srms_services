@@ -70,6 +70,23 @@ public class UserServiceClient : IUserServiceClient
         return null;
     }
 
+    public async Task<UserDTO> UpdateUserAsync(Guid userId, UpdateRequest user)
+    {
+        var accessToken = await GetAuth0OAuth2TokenAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Put, $"api/s2s/users/{userId}")
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(user), System.Text.Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        var response = await _httpClient.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<UserDTO>();
+        }
+        throw new Exception($"Failed to update user: {response.StatusCode}");
+    }
+
     public async Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();

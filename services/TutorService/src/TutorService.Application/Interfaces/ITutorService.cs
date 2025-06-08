@@ -13,5 +13,6 @@ namespace TutorService.Application.Interfaces
         Task<IEnumerable<Guid>> GetAssignedCoursesAsync(Guid tutorId);
         Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId);
         Task CreateTutorAsync(Guid userId);
+        Task<TutorDTO> UpdateTutorAsync(Guid userId, UpdateRequest request);
     }
 }

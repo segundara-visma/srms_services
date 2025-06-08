@@ -37,4 +37,28 @@ public class AssignGradeTests : BaseTest
         // Assert
         result.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task AssignGradeAsync_WhenGradeBelowZero_ThrowsException()
+    {
+        // Arrange
+        var studentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var grade = -5m;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _tutorService.AssignGradeAsync(studentId, courseId, grade));
+    }
+
+    [Fact]
+    public async Task AssignGradeAsync_WhenGradeAboveHundred_ThrowsException()
+    {
+        // Arrange
+        var studentId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var grade = 105m;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _tutorService.AssignGradeAsync(studentId, courseId, grade));
+    }
 }

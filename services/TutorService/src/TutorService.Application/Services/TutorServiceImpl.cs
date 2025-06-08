@@ -34,14 +34,54 @@ public class TutorServiceImpl : ITutorService
         if (user == null || user.Role != "Tutor")
             throw new ArgumentException($"User with ID {tutorId} is not a tutor.");
 
-        return new TutorDTO
+        //return new TutorDTO
+        //{
+        //    Id = tutor.Id,
+        //    UserId = user.Id,
+        //    FirstName = user.FirstName,
+        //    LastName = user.LastName,
+        //    Email = user.Email
+        //};
+        return new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile);
+    }
+
+    public async Task<TutorDTO> UpdateTutorAsync(Guid tutorId, UpdateRequest request)
+    {
+        var tutor = await _tutorRepository.GetByUserIdAsync(tutorId);
+        if (tutor == null)
+            throw new ArgumentException($"Tutor with ID {tutorId} not found.");
+
+        var user = await _userServiceClient.UpdateUserAsync(tutorId, request);
+        if (user == null)
+            throw new ArgumentException($"Update request failed.");
+
+        //return new TutorDTO
+        //{
+        //    Id = tutor.Id,
+        //    UserId = user.Id,
+        //    FirstName = user.FirstName,
+        //    LastName = user.LastName,
+        //    Email = user.Email
+        //};
+
+        var profile = new Profile
         {
-            Id = tutor.Id,
-            UserId = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email
+            Address = request.Address,
+            Phone = request.Phone,
+            City = request.City,
+            State = request.State,
+            ZipCode = request.ZipCode,
+            Country = request.Country,
+            Nationality = request.Nationality,
+            Bio = request.Bio,
+            FacebookUrl = request.FacebookUrl,
+            TwitterUrl = request.TwitterUrl,
+            LinkedInUrl = request.LinkedInUrl,
+            InstagramUrl = request.InstagramUrl,
+            WebsiteUrl = request.WebsiteUrl
         };
+
+        return new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, profile);
     }
 
     public async Task<IEnumerable<TutorDTO>> GetAllTutorsAsync()
@@ -54,14 +94,14 @@ public class TutorServiceImpl : ITutorService
             var tutor = await _tutorRepository.GetByUserIdAsync(user.Id);
             if (tutor != null)
             {
-                tutorDTOs.Add(new TutorDTO
-                {
-                    Id = tutor.Id,
-                    UserId = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email
-                });
+                tutorDTOs.Add(new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile));
+                //{
+                //    Id = tutor.Id,
+                //    UserId = user.Id,
+                //    FirstName = user.FirstName,
+                //    LastName = user.LastName,
+                //    Email = user.Email
+                //});
             }
         }
 

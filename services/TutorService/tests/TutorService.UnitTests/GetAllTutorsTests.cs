@@ -24,23 +24,46 @@ public class GetAllTutorsTests : BaseTest
     public async Task GetAllTutorsAsync_WhenTutorsExist_ReturnsTutorList()
     {
         // Arrange
-        var tutorId = Guid.NewGuid();
+        var tutorId1 = Guid.NewGuid();
+        var tutorId2 = Guid.NewGuid();
         var users = new List<UserDTO>
         {
-            new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "123", "Tutor") // Use primary constructor
+            CreateTestUserDTO(tutorId1, new Profile { Address = "789 Pine St" }),
+            CreateTestUserDTO(tutorId2)
         };
         var tutors = new List<Tutor>
         {
-            new Tutor { Id = Guid.NewGuid(), UserId = tutorId }
+            CreateTestTutor(userId: tutorId1),
+            CreateTestTutor(userId: tutorId2)
         };
         UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync("Tutor")).ReturnsAsync(users);
-        TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(tutors[0]);
+        foreach (var tutor in tutors)
+            MockGetTutorByUserIdAsync(tutor.UserId, tutor);
 
         // Act
         var result = await _tutorService.GetAllTutorsAsync();
 
         // Assert
-        result.Should().HaveCount(1);
-        result.Should().ContainSingle(t => t.Email == "tutor1@example.com");
+        result.Should().HaveCount(2);
+        var tutor1 = result.Single(t => t.UserId == tutorId1);
+        tutor1.Email.Should().Be("tutor1@example.com");
+        tutor1.Profile.Should().NotBeNull();
+        tutor1.Profile.Address.Should().Be("789 Pine St");
+        var tutor2 = result.Single(t => t.UserId == tutorId2);
+        tutor2.Email.Should().Be("tutor1@example.com");
+        tutor2.Profile.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllTutorsAsync_WhenNoTutors_ReturnsEmptyList()
+    {
+        // Arrange
+        UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync("Tutor")).ReturnsAsync(new List<UserDTO>());
+
+        // Act
+        var result = await _tutorService.GetAllTutorsAsync();
+
+        // Assert
+        result.Should().BeEmpty();
     }
 }

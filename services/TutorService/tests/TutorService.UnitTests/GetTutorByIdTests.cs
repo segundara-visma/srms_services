@@ -24,8 +24,9 @@ public class GetTutorByIdTests : BaseTest
     {
         // Arrange
         var tutorId = Guid.NewGuid();
-        var tutor = new Tutor { Id = Guid.NewGuid(), UserId = tutorId };
-        var user = new UserDTO(tutorId, "Tutor", "One", "tutor1@example.com", "123", "Tutor"); // Use primary constructor
+        var tutor = CreateTestTutor(userId: tutorId);
+        var profile = new Profile { Address = "789 Pine St" };
+        var user = CreateTestUserDTO(tutorId, profile);
         TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(tutor);
         UserServiceClientMock.Setup(c => c.GetUserByIdAsync(tutorId)).ReturnsAsync(user);
 
@@ -34,7 +35,38 @@ public class GetTutorByIdTests : BaseTest
 
         // Assert
         result.Should().NotBeNull();
+        result.Id.Should().Be(tutor.Id);
         result.UserId.Should().Be(tutorId);
-        result.Email.Should().Be("tutor1@example.com");
+        result.FirstName.Should().Be(user.FirstName);
+        result.LastName.Should().Be(user.LastName);
+        result.Email.Should().Be(user.Email);
+        result.Role.Should().Be(user.Role);
+        result.Profile.Should().NotBeNull();
+        result.Profile.Address.Should().Be(profile.Address);
+    }
+
+    [Fact]
+    public async Task GetTutorByIdAsync_WhenTutorNotFound_ThrowsException()
+    {
+        // Arrange
+        var tutorId = Guid.NewGuid();
+        TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync((Tutor)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _tutorService.GetTutorByIdAsync(tutorId));
+    }
+
+    [Fact]
+    public async Task GetTutorByIdAsync_WhenNonTutorUser_ThrowsException()
+    {
+        // Arrange
+        var tutorId = Guid.NewGuid();
+        var tutor = CreateTestTutor(userId: tutorId);
+        var user = new UserDTO(tutorId, "NonTutor", "User", "nontutor@example.com", "Student", null);
+        TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(tutor);
+        UserServiceClientMock.Setup(c => c.GetUserByIdAsync(tutorId)).ReturnsAsync(user);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _tutorService.GetTutorByIdAsync(tutorId));
     }
 }

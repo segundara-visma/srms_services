@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TutorService.Application.Interfaces;
+using System.Security.Claims; // Added to resolve ClaimTypes
 
 /// <summary>
 /// Provides RESTful API endpoints for managing tutor-related operations within the Student Record Management System (SRMS).
@@ -47,6 +48,62 @@ public class TutorsController : ControllerBase
         catch (ArgumentException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the currently signed-in tutor.
+    /// </summary>
+    /// <returns>
+    /// An object containing the tutor's details if found, or a 401 Not authorized.
+    /// </returns>
+    /// <response code="200">Returns the tutor details.</response>
+    /// <response code="401">If the request is not authorized.</response>
+    [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMe()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            var tutor = await _tutorService.GetTutorByIdAsync(Guid.Parse(userId));
+            return Ok(tutor);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Updates the currently signed-in tutor.
+    /// </summary>
+    /// <returns>
+    /// A 204 No Content response if the assignment is successful, a 400 Bad Request, or a 401 Not Authorize.
+    /// </returns>
+    /// <response code="204">Returns No Content response.</response>
+    /// <response code="401">If the request is not authorized.</response>
+    [HttpPut("me")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequest dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        try
+        {
+            dto = dto with { Id = Guid.Parse(userId) }; // Set Id from token
+            await _tutorService.UpdateTutorAsync(Guid.Parse(userId), dto);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
