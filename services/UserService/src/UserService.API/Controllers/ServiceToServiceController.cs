@@ -113,11 +113,11 @@ public class ServiceToServiceController : ControllerBase
     }
 
     /// <summary>
-    /// StudentService requests to get all users with the specified role.
+    /// Requests to get all users with the specified role.
     /// </summary>
     /// <param name="role">The role name (e.g., Student, Tutor, Admin).</param>
     /// <returns>A list of users with the specified role.</returns>
-    [HttpGet("by-role")]
+    [HttpGet("all/by-role")]
     public async Task<IActionResult> GetUsersByRole([FromQuery] string role)
     {
         if (string.IsNullOrWhiteSpace(role))
@@ -127,6 +127,33 @@ public class ServiceToServiceController : ControllerBase
 
         var users = await _userService.GetUsersByRoleAsync(role);
         return Ok(users);
+    }
+
+    /// <summary>
+    /// Retrieves all users with the specified role.
+    /// </summary>
+    /// <param name="role">The role of the users to retrieve (e.g., "Tutor", "Student").</param>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{UserResponse}"/> containing the paginated list of users.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of users.</response>
+    /// <response code="400">If the role is invalid.</response>
+    [HttpGet("by-role")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaginatedResponse<UserResponse>>> GetUsersByRole([FromQuery] string role, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var users = await _userService.GetUsersByRoleAsync(role, page, pageSize);
+            return Ok(users);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

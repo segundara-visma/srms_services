@@ -29,16 +29,22 @@ public class GetAllUsersByRoleTests : BaseTest
     public async Task GetAllUsersByRoleAsync_WhenRoleExists_ReturnsUsers()
     {
         var role = "Tutor";
-        var admins = new List<AdminDTO> { CreateTestAdminDTO(Guid.NewGuid(), new Profile { Address = "123 Main St" }) };
-        MockGetUsersByRoleAsync(role, admins);
+        var userId = Guid.NewGuid();
+        var admins = new List<AdminDTO> { CreateTestAdminDTO(userId, new Profile { Address = "123 Main St" }) };
+        MockGetUsersByRoleAsync(role, admins, page: 1, pageSize: 10, totalCount: 1);
 
         var result = await _adminService.GetAllUsersByRoleAsync(role);
 
-        result.Should().HaveCount(1);
-        var user = result.Single();
+        result.Should().NotBeNull();
+        result.Items.Should().HaveCount(1);
+        var user = result.Items.Single();
         user.Email.Should().Be("john.doe@example.com");
         user.Profile.Should().NotBeNull();
         user.Profile.Address.Should().Be("123 Main St");
+        result.Page.Should().Be(1);
+        result.PageSize.Should().Be(10);
+        result.TotalCount.Should().Be(1);
+        result.TotalPages.Should().Be(1);
     }
 
     [Fact]
@@ -53,10 +59,15 @@ public class GetAllUsersByRoleTests : BaseTest
     public async Task GetAllUsersByRoleAsync_WhenNoUsers_ReturnsEmptyList()
     {
         var role = "Tutor";
-        MockGetUsersByRoleAsync(role, new List<AdminDTO>());
+        MockGetUsersByRoleAsync(role, new List<AdminDTO>(), page: 1, pageSize: 10, totalCount: 0);
 
         var result = await _adminService.GetAllUsersByRoleAsync(role);
 
-        result.Should().BeEmpty();
+        result.Should().NotBeNull();
+        result.Items.Should().BeEmpty();
+        result.Page.Should().Be(1);
+        result.PageSize.Should().Be(10);
+        result.TotalCount.Should().Be(0);
+        result.TotalPages.Should().Be(0);
     }
 }

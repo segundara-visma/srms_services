@@ -69,11 +69,11 @@ public class UserServiceClient : IUserServiceClient
         throw new Exception($"Failed to create user: {response.StatusCode}");
     }
 
-    public async Task<IEnumerable<AdminDTO>> GetUsersByRoleAsync(string role)
+    public async Task<IEnumerable<AdminDTO>> GetAllUsersByRoleAsync(string role)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={role}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/all/by-role?role={role}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);
@@ -84,6 +84,29 @@ public class UserServiceClient : IUserServiceClient
         }
 
         return null;
+    }
+
+    public async Task<PaginatedResponse<AdminDTO>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+            throw new ArgumentException("Role cannot be empty.", nameof(role));
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var accessToken = await GetAuth0OAuth2TokenAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={Uri.EscapeDataString(role)}&page={page}&pageSize={pageSize}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<PaginatedResponse<AdminDTO>>() ??
+                new PaginatedResponse<AdminDTO> { Items = Enumerable.Empty<AdminDTO>(), TotalCount = 0, Page = page, PageSize = pageSize };
+        }
+
+        return new PaginatedResponse<AdminDTO> { Items = Enumerable.Empty<AdminDTO>(), TotalCount = 0, Page = page, PageSize = pageSize };
     }
 
     // Method to make requests to the UserService using the token

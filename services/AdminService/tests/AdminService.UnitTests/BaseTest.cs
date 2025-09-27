@@ -57,9 +57,22 @@ namespace AdminService.UnitTests
                 .ReturnsAsync(userId);
         }
 
-        protected void MockGetUsersByRoleAsync(string role, IEnumerable<AdminDTO> admins)
+        protected void MockGetUsersByRoleAsync(string role, IEnumerable<AdminDTO> admins, int page = 1, int pageSize = 10, int totalCount = 0)
         {
-            UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync(role)).ReturnsAsync(admins);
+            UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync(role, page, pageSize))
+                .ReturnsAsync(new PaginatedResponse<AdminDTO>
+                {
+                    Items = admins,
+                    TotalCount = totalCount,
+                    Page = page,
+                    PageSize = pageSize
+                });
+        }
+
+        protected void MockGetAllUsersByRoleAsync(string role, IEnumerable<AdminDTO> admins)
+        {
+            UserServiceClientMock.Setup(c => c.GetAllUsersByRoleAsync(role))
+                .ReturnsAsync(admins);
         }
 
         protected void MockUpdateUserAsync(Guid userId, UpdateRequest request, AdminDTO adminDTO)

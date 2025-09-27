@@ -135,4 +135,17 @@ public class UserRepository : IUserRepository
             .Include(u => u.Role)  // Include the Role data
             .ToListAsync();
     }
+
+    // Get users linked to a specific role
+    public async Task<PaginatedResult<User>> GetUsersByRoleIdAsync(int roleId, int page, int pageSize)
+    {
+        var query = _context.Set<User>().Where(u => u.Role.Id == roleId);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<User> { Items = items, TotalCount = totalCount };
+    }
 }

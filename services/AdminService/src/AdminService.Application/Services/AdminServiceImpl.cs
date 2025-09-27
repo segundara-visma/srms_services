@@ -32,12 +32,22 @@ public class AdminServiceImpl : IAdminService
         _enrollmentServiceClient = enrollmentServiceClient ?? throw new ArgumentNullException(nameof(enrollmentServiceClient));
     }
 
-    public async Task<IEnumerable<AdminDTO>> GetAllUsersByRoleAsync(string role)
+    //public async Task<IEnumerable<AdminDTO>> GetAllUsersByRoleAsync(string role)
+    //{
+    //    if (string.IsNullOrWhiteSpace(role))
+    //        throw new ArgumentException("Role cannot be empty.", nameof(role));
+
+    //    return await _userServiceClient.GetUsersByRoleAsync(role);
+    //}
+
+    public async Task<PaginatedResponse<AdminDTO>> GetAllUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(role))
             throw new ArgumentException("Role cannot be empty.", nameof(role));
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
 
-        return await _userServiceClient.GetUsersByRoleAsync(role);
+        return await _userServiceClient.GetUsersByRoleAsync(role, page, pageSize);
     }
 
     public async Task<Guid> CreateUserAsync(string firstName, string lastName, string email, string password, string role)
@@ -71,7 +81,7 @@ public class AdminServiceImpl : IAdminService
     public async Task<SystemOverviewDTO> GetSystemOverviewAsync()
     {
         var tutorsTask = _tutorServiceClient.GetAllTutorsAsync();
-        var studentsTask = _userServiceClient.GetUsersByRoleAsync("Student");
+        var studentsTask = _userServiceClient.GetAllUsersByRoleAsync("Student");
         var gradesTask = _gradeServiceClient.GetAllGradesAsync();
         var coursesTask = _courseServiceClient.GetAllCoursesAsync();
         var enrollmentsTask = _enrollmentServiceClient.GetAllEnrollmentsAsync();

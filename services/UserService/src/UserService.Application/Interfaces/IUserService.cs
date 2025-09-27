@@ -14,4 +14,5 @@ public interface IUserService
     Task<bool> ValidatePasswordAsync(Guid userId, string password);
     Task<UserResponse?> UpdateAsync(Guid id, UpdateRequest user);  // Update existing user
     Task<IEnumerable<UserResponse>> GetUsersByRoleAsync(string role); // This is needed by the StudentService
+    Task<PaginatedResponse<UserResponse>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10);
 }

@@ -2,6 +2,9 @@ using Moq;
 using UserService.Application.Interfaces;
 using UserService.Application.Services;
 using UserService.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace UserService.UnitTests
@@ -17,7 +20,7 @@ namespace UserService.UnitTests
             _userService = new UserServices(_userRepositoryMock.Object);
         }
 
-        // Helper function to create a test user
+        // Helper function to create a test user with initialized Role and Profile
         protected User CreateTestUser(Guid? userId = null)
         {
             return new User
@@ -27,15 +30,16 @@ namespace UserService.UnitTests
                 Firstname = "Test",
                 Lastname = "User",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Role = new Role { Id = 1, Name = "Student" },
-                Profile = new Profile { Address = "123 Test St." }
+                RoleId = 1, // int for RoleId
+                Role = new Role { Id = 1, Name = "Student" }, // Initialize Role
+                Profile = new Profile { Address = "123 Test St." } // Initialize Profile
             };
         }
 
         // Helper function to create a test role
         protected Role CreateTestRole(string roleName = "Student")
         {
-            return new Role { Id = 1, Name = roleName };
+            return new Role { Id = 1, Name = roleName }; // int for Role.Id
         }
 
         // Mock repository methods
@@ -59,21 +63,17 @@ namespace UserService.UnitTests
             _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(role.Name)).ReturnsAsync(role);
         }
 
-        //// Mock ValidatePasswordAsync in the UserService (this is specific to the service)
-        //protected void MockValidatePasswordAsync(User user, bool result)
-        //{
-        //    // Mock the GetByIdAsync method of the repository, which is used in the service
-        //    _userRepositoryMock.Setup(repo => repo.GetByIdAsync(user.Id)).ReturnsAsync(user);
-
-        //    // We do not mock the ValidatePasswordAsync method on IUserService directly.
-        //    // Instead, we expect that _userService will call GetByIdAsync via _userRepositoryMock.
-        //    // The actual ValidatePasswordAsync is tested by interacting with the service.
-        //}
-
-        // Mock UpdateAsync in UserRepository
-        protected void MockUpdateUserAsync()
+        protected void MockUpdateUserAsync(User user)
         {
-            _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<User>())).Returns(Task.CompletedTask);
+            _userRepositoryMock.Setup(repo => repo.UpdateAsync(user)).Returns(Task.CompletedTask);
+        }
+
+        protected void MockGetUsersByRoleIdAsync(int roleId, IEnumerable<User> users, int totalCount, int page = 1, int pageSize = 10)
+        {
+            var paginatedUsers = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var paginatedResult = new PaginatedResult<User> { Items = paginatedUsers, TotalCount = totalCount };
+            _userRepositoryMock.Setup(repo => repo.GetUsersByRoleIdAsync(roleId, page, pageSize))
+                .Returns(Task.FromResult(paginatedResult));
         }
     }
 }

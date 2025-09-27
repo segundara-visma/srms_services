@@ -14,4 +14,5 @@ public interface IUserRepository
     Task<Role?> GetRoleByIdAsync(int roleId);  // Get a role by its ID
     Task<Role?> GetRoleByNameAsync(string roleName);  // Get a role by its name
     Task<IList<User>> GetUsersByRoleIdAsync(int roleId);  // Get all users assigned to a specific role
+    Task<PaginatedResult<User>> GetUsersByRoleIdAsync(int roleId, int page, int pageSize);
 }

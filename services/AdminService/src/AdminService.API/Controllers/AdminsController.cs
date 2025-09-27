@@ -28,23 +28,50 @@ public class AdminsController : ControllerBase
         _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
     }
 
+    ///// <summary>
+    ///// Retrieves all users with the specified role.
+    ///// </summary>
+    ///// <param name="role">The role of the users to retrieve (e.g., "Tutor", "Student").</param>
+    ///// <returns>
+    ///// An <see cref="IEnumerable{UserDTO}"/> containing the users with the specified role.
+    ///// </returns>
+    ///// <response code="200">Returns the list of users.</response>
+    ///// <response code="400">If the role is invalid.</response>
+    //[HttpGet("users/by-role")]
+    //[ProducesResponseType(StatusCodes.Status200OK)]
+    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+    //public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsersByRoleAsync([FromQuery] string role)
+    //{
+    //    try
+    //    {
+    //        var users = await _adminService.GetAllUsersByRoleAsync(role);
+    //        return Ok(users);
+    //    }
+    //    catch (ArgumentException ex)
+    //    {
+    //        return BadRequest(new { message = ex.Message });
+    //    }
+    //}
+
     /// <summary>
     /// Retrieves all users with the specified role.
     /// </summary>
     /// <param name="role">The role of the users to retrieve (e.g., "Tutor", "Student").</param>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
     /// <returns>
-    /// An <see cref="IEnumerable{UserDTO}"/> containing the users with the specified role.
+    /// A <see cref="PaginatedResponse{AdminDTO}"/> containing the paginated list of users.
     /// </returns>
-    /// <response code="200">Returns the list of users.</response>
+    /// <response code="200">Returns the paginated list of users.</response>
     /// <response code="400">If the role is invalid.</response>
     [HttpGet("users/by-role")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsersByRoleAsync([FromQuery] string role)
+    public async Task<ActionResult<PaginatedResponse<AdminDTO>>> GetAllUsersByRoleAsync([FromQuery] string role, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
-            var users = await _adminService.GetAllUsersByRoleAsync(role);
+            var users = await _adminService.GetAllUsersByRoleAsync(role, page, pageSize);
             return Ok(users);
         }
         catch (ArgumentException ex)

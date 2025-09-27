@@ -126,4 +126,43 @@ public class UserServices : IUserService
             Profile = user.Profile
         });
     }
+
+    public async Task<PaginatedResponse<UserResponse>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+            throw new ArgumentException("Role cannot be empty.", nameof(role));
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var roleEntity = await _userRepository.GetRoleByNameAsync(role);
+        if (roleEntity == null)
+        {
+            return new PaginatedResponse<UserResponse>
+            {
+                Items = Enumerable.Empty<UserResponse>(),
+                TotalCount = 0,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        var paginatedResult = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id, page, pageSize);
+        var items = paginatedResult.Items.Select(user => new UserResponse
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Firstname = user.Firstname,
+            Lastname = user.Lastname,
+            Role = user.Role.Name,
+            Profile = user.Profile
+        });
+
+        return new PaginatedResponse<UserResponse>
+        {
+            Items = items,
+            TotalCount = paginatedResult.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

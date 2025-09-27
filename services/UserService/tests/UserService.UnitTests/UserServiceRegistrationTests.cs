@@ -2,14 +2,12 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
-using Moq;                      // For Moq's mocking capabilities (Times, It, etc.)
-using UserService.Domain.Entities;  // For User and Role definitions
-using UserService.Application.Interfaces;  // For IUserService and IUserRepository
-using System.Threading.Tasks;  // For async methods
+using UserService.Domain.Entities;
+using Moq;
 
 namespace UserService.UnitTests
 {
-    public class UserServiceRegistrationTests : BaseTest
+    public class UserServiceRegisterTests : BaseTest
     {
         [Fact]
         public async Task RegisterUser_Should_Create_New_User_When_Valid()
@@ -20,16 +18,20 @@ namespace UserService.UnitTests
             var roleName = "Student";
             var role = CreateTestRole(roleName);
 
-            // Mock methods for repository
-            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(user.Email)).ReturnsAsync((User?)null); // No user exists with this email
-            MockAddUserAsync();  // Make sure AddAsync will succeed
-            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync(role);  // Mock role retrieval
+            User addedUser = null!; // Non-nullable with null-forgiving operator, as it's set in Callback
+            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(user.Email)).ReturnsAsync((User?)null);
+            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync(role);
+            _userRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<User>())).Callback<User>(u => addedUser = u).Returns(Task.CompletedTask);
 
             // Act
             await _userService.RegisterUser(user, plainPassword, roleName);
 
             // Assert
-            _userRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<User>()), Times.Once);  // Ensure AddAsync is called once
+            _userRepositoryMock.Verify(repo => repo.AddAsync(It.IsAny<User>()), Times.Once());
+            addedUser.Should().NotBeNull();
+            BCrypt.Net.BCrypt.Verify(plainPassword, addedUser.PasswordHash).Should().BeTrue(); // Verify password matches
+            addedUser.RoleId.Should().Be(role.Id);
+            addedUser.Id.Should().NotBe(Guid.Empty); // Verify Id is set
         }
 
         [Fact]
@@ -37,7 +39,6 @@ namespace UserService.UnitTests
         {
             // Arrange
             var user = CreateTestUser();
-            // Mock that a user already exists with the same email
             _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(user.Email)).ReturnsAsync(user);
 
             // Act & Assert
@@ -51,7 +52,7 @@ namespace UserService.UnitTests
             // Arrange
             var user = CreateTestUser();
             var roleName = "InvalidRole";
-            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync((Role?)null);  // Invalid role
+            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(roleName)).ReturnsAsync((Role?)null);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.RegisterUser(user, "password123", roleName));
