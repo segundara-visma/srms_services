@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Interfaces;
+using UserService.Application.Common;
 using UserService.Application.DTOs;
+using UserService.Application.Mappers;
 using UserService.Domain.Entities;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -40,28 +42,12 @@ public class ServiceToServiceController : ControllerBase
             var user = await _userService.GetByEmailAsync(email);
 
             if (user == null)
-            {
-                Console.WriteLine($"User with email {email} not found.");
                 return NotFound();
-            }
 
-            var response = new UserResponse
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Firstname = user.Firstname,
-                Lastname = user.Lastname,
-                Role = user.Role?.Name ?? "Unknown" // Use Role.Name instead of ToString()
-                //Role = user.Role.ToString()
-            };
-
-            Console.WriteLine($"Successfully retrieved user: {response.Email} with role: {response.Role}");
-            return Ok(response);
+            return Ok(UserMapper.ToDto(user));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log any exception that occurs during the process
-            Console.WriteLine($"Error occurred while retrieving user: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
     }
@@ -94,22 +80,11 @@ public class ServiceToServiceController : ControllerBase
     public async Task<IActionResult> StudentServiceRequestUserById(Guid userid)
     {
         var user = await _userService.GetByIdAsync(userid);
+
         if (user == null)
-        {
             return NotFound();
-        }
 
-        var response = new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.ToString(),
-            Profile = user.Profile
-        };
-
-        return Ok(response);
+        return Ok(user);
     }
 
     /// <summary>
@@ -136,14 +111,14 @@ public class ServiceToServiceController : ControllerBase
     /// <param name="page">The page number (default: 1).</param>
     /// <param name="pageSize">The number of items per page (default: 10).</param>
     /// <returns>
-    /// A <see cref="PaginatedResponse{UserResponse}"/> containing the paginated list of users.
+    /// A <see cref="PaginatedResponse{UserResponseDTO}"/> containing the paginated list of users.
     /// </returns>
     /// <response code="200">Returns the paginated list of users.</response>
     /// <response code="400">If the role is invalid.</response>
     [HttpGet("by-role")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PaginatedResponse<UserResponse>>> GetUsersByRole([FromQuery] string role, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PaginatedResponse<UserResponseDTO>>> GetUsersByRole([FromQuery] string role, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
@@ -162,7 +137,7 @@ public class ServiceToServiceController : ControllerBase
     /// <param name="request">Object containing the user's email, password, firstname, lastname and role.</param>
     /// <returns>A register-response object.</returns>
     [HttpPost("register")]
-    public async Task<IActionResult> CreateUser([FromBody] RegisterRequest request)
+    public async Task<IActionResult> CreateUser([FromBody] RegisterRequestDTO request)
     {
         // Hash the password before saving
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -177,11 +152,11 @@ public class ServiceToServiceController : ControllerBase
 
         await _userService.RegisterUser(user, request.Password, request.Role);
 
-        var response = new RegisterResponse
-        {
-            UserId = user.Id,
-            Email = user.Email
-        };
+        var response = new RegisterResponseDTO
+        (
+            user.Id,
+            user.Email
+        );
 
         return Ok(response.UserId);
     }
@@ -194,7 +169,7 @@ public class ServiceToServiceController : ControllerBase
     /// <returns>An update-user-response object.</returns>
     [HttpPut("{id}")]
     [Authorize]  // Validate the credentials before going ahead to process the request
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequest request)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequestDTO request)
     {
         if (id != request.Id)
         {

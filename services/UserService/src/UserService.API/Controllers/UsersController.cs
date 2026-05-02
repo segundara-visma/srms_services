@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Interfaces;  // For IUserService
 using UserService.Domain.Entities;
+using UserService.Application.Common;
 using UserService.Application.DTOs;
+using UserService.Application.Mappers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
@@ -10,7 +12,7 @@ namespace UserService.Api.Controllers;
 /// <summary>
 /// Controller for handling user-related API operations.
 /// </summary>
-[Route("api/[controller]")]
+[Route("api/users")]
 [ApiController]
 public class UsersController : ControllerBase
 {
@@ -35,24 +37,12 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetUserById(Guid id)
     {
+        var user = await _userService.GetByIdAsync(id);
 
-        var user = await _userService.GetByIdAsync(id);  // Use service to get user
         if (user == null)
-        {
             return NotFound();
-        }
 
-        var response = new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.ToString(),
-            Profile = user.Profile
-        };
-
-        return Ok(response);
+        return Ok(user);
     }
 
     /// <summary>
@@ -63,15 +53,27 @@ public class UsersController : ControllerBase
     /// <returns>An update-user-response object.</returns>
     [HttpPut("{id}")]
     [Authorize]  // Validate the credentials before going ahead to process the request
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequest request)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequestDTO request)
     {
         if (id != request.Id)
-        {
             return BadRequest("User ID mismatch");
-        }
 
         var response = await _userService.UpdateAsync(id, request);
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Retrieves users in batch by IDs.
+    /// </summary>
+    [HttpGet("batch")]
+    public async Task<IActionResult> GetUsersByIds([FromQuery] List<Guid> ids)
+    {
+        if (ids == null || !ids.Any())
+            return BadRequest("Ids are required");
+
+        var users = await _userService.GetByIdsAsync(ids);
+
+        return Ok(users);
     }
 }

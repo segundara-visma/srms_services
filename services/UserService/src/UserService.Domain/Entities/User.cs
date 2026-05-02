@@ -14,5 +14,5 @@ public class User
     public int RoleId { get; set; }  // Foreign Key to Role
     public Role Role { get; set; }    // Navigation property
 
-    public Profile Profile { get; set; }  // Navigation property to Profile
+    public Profile? Profile { get; set; }  // Navigation property to Profile
 }

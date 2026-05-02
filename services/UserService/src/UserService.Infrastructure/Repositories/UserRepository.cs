@@ -3,6 +3,7 @@ using UserService.Domain.Entities;
 using UserService.Infrastructure.Persistence;
 using System.Threading.Tasks;
 using UserService.Application.Interfaces;
+using UserService.Application.Common;
 using UserService.Application.DTOs;
 using Microsoft.AspNetCore.Identity;
 
@@ -43,22 +44,25 @@ public class UserRepository : IUserRepository
     // Update existing user
     public async Task UpdateAsync(User user)
     {
-        // Fetch the existing user from the database
         var existingUser = await _context.Users
-            .Include(u => u.Role)  // Include Role if needed
-            .Include(u => u.Profile) // Include Profile if needed
+            .Include(u => u.Role)
+            .Include(u => u.Profile)
             .FirstOrDefaultAsync(u => u.Id == user.Id);
 
         if (existingUser == null)
-        {
             throw new Exception("User not found.");
-        }
 
-        // Update user properties
         existingUser.Email = user.Email ?? existingUser.Email;
         existingUser.Firstname = user.Firstname ?? existingUser.Firstname;
         existingUser.Lastname = user.Lastname ?? existingUser.Lastname;
 
+        // Ensure Profile exists
+        existingUser.Profile ??= new Profile
+        {
+            UserId = existingUser.Id
+        };
+
+        // Now safe
         existingUser.Profile.Address = user.Profile?.Address ?? existingUser.Profile.Address;
         existingUser.Profile.Phone = user.Profile?.Phone ?? existingUser.Profile.Phone;
         existingUser.Profile.City = user.Profile?.City ?? existingUser.Profile.City;
@@ -73,7 +77,6 @@ public class UserRepository : IUserRepository
         existingUser.Profile.InstagramUrl = user.Profile?.InstagramUrl ?? existingUser.Profile.InstagramUrl;
         existingUser.Profile.WebsiteUrl = user.Profile?.WebsiteUrl ?? existingUser.Profile.WebsiteUrl;
 
-        // Save the changes
         await _context.SaveChangesAsync();
     }
 
@@ -133,19 +136,37 @@ public class UserRepository : IUserRepository
         return await _context.Users
             .Where(u => u.RoleId == roleId)  // Filter by RoleId
             .Include(u => u.Role)  // Include the Role data
+            .Include(u => u.Profile)
             .ToListAsync();
     }
 
     // Get users linked to a specific role
     public async Task<PaginatedResult<User>> GetUsersByRoleIdAsync(int roleId, int page, int pageSize)
     {
-        var query = _context.Set<User>().Where(u => u.Role.Id == roleId);
+        var query = _context.Users
+            .Include(u => u.Role)
+            .Include(u => u.Profile)
+            .Where(u => u.RoleId == roleId);
+
         var totalCount = await query.CountAsync();
+
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        return new PaginatedResult<User> { Items = items, TotalCount = totalCount };
+        return new PaginatedResult<User>
+        {
+            Items = items,
+            TotalCount = totalCount
+        };
+    }
+
+    public async Task<List<User>> GetByUserIdsAsync(List<Guid> userIds)
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .Where(user => userIds.Contains(user.Id))
+            .ToListAsync();
     }
 }

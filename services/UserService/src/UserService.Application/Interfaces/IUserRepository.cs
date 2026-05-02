@@ -1,4 +1,5 @@
 using UserService.Domain.Entities;
+using UserService.Application.Common;
 using UserService.Application.DTOs;
 
 namespace UserService.Application.Interfaces;
@@ -15,4 +16,5 @@ public interface IUserRepository
     Task<Role?> GetRoleByNameAsync(string roleName);  // Get a role by its name
     Task<IList<User>> GetUsersByRoleIdAsync(int roleId);  // Get all users assigned to a specific role
     Task<PaginatedResult<User>> GetUsersByRoleIdAsync(int roleId, int page, int pageSize);
+    Task<List<User>> GetByUserIdsAsync(List<Guid> userIds);
 }

@@ -2,7 +2,9 @@ using UserService.Application.Interfaces;
 using UserService.Domain.Entities;
 using System.Threading.Tasks;
 using BCrypt.Net;
+using UserService.Application.Common;
 using UserService.Application.DTOs;
+using UserService.Application.Mappers;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,33 +20,26 @@ public class UserServices : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<UserResponse?> GetByIdAsync(Guid id)
+    public async Task<UserResponseDTO?> GetByIdAsync(Guid id)
     {
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null) return null;
 
-        return new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.Name,
-            Profile = user.Profile
-        };
+        return UserMapper.ToDto(user);
     }
 
-    public async Task<UserResponse?> UpdateAsync(Guid id, UpdateRequest request)
+    public async Task<UserResponseDTO?> UpdateAsync(Guid id, UpdateRequestDTO request)
     {
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null)
-        {
             throw new Exception("User not found");
-        }
 
         user.Firstname = request.Firstname ?? user.Firstname;
         user.Lastname = request.Lastname ?? user.Lastname;
         user.Email = request.Email ?? user.Email;
+
+        // Ensure Profile exists
+        user.Profile ??= new Profile();
 
         user.Profile.Address = request.Address ?? user.Profile.Address;
         user.Profile.Phone = request.Phone ?? user.Profile.Phone;
@@ -62,15 +57,7 @@ public class UserServices : IUserService
 
         await _userRepository.UpdateAsync(user);
 
-        return new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.Name,
-            Profile = user.Profile
-        };
+        return UserMapper.ToDto(user);
     }
 
     public async Task<User?> GetByEmailAsync(string email)
@@ -107,62 +94,53 @@ public class UserServices : IUserService
         await _userRepository.AddAsync(user);
     }
 
-    public async Task<IEnumerable<UserResponse>> GetUsersByRoleAsync(string role)
+    public async Task<IEnumerable<UserResponseDTO>> GetUsersByRoleAsync(string role)
     {
         var roleEntity = await _userRepository.GetRoleByNameAsync(role);
         if (roleEntity == null)
-        {
-            return Enumerable.Empty<UserResponse>(); // Return empty list if role not found
-        }
+            return Enumerable.Empty<UserResponseDTO>();
 
         var users = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id);
-        return users.Select(user => new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.Name,
-            Profile = user.Profile
-        });
+
+        return users.Select(UserMapper.ToDto);
     }
 
-    public async Task<PaginatedResponse<UserResponse>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
+    public async Task<PaginatedResponse<UserResponseDTO>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(role))
             throw new ArgumentException("Role cannot be empty.", nameof(role));
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 10;
 
         var roleEntity = await _userRepository.GetRoleByNameAsync(role);
         if (roleEntity == null)
         {
-            return new PaginatedResponse<UserResponse>
+            return new PaginatedResponse<UserResponseDTO>
             {
-                Items = Enumerable.Empty<UserResponse>(),
+                Items = Enumerable.Empty<UserResponseDTO>(),
                 TotalCount = 0,
                 Page = page,
                 PageSize = pageSize
             };
         }
 
-        var paginatedResult = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id, page, pageSize);
-        var items = paginatedResult.Items.Select(user => new UserResponse
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Firstname = user.Firstname,
-            Lastname = user.Lastname,
-            Role = user.Role.Name,
-            Profile = user.Profile
-        });
+        var result = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id, page, pageSize);
 
-        return new PaginatedResponse<UserResponse>
+        return new PaginatedResponse<UserResponseDTO>
         {
-            Items = items,
-            TotalCount = paginatedResult.TotalCount,
+            Items = result.Items.Select(UserMapper.ToDto),
+            TotalCount = result.TotalCount,
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public async Task<List<UsersInBatchDTO>> GetByIdsAsync(List<Guid> ids)
+    {
+        var users = await _userRepository.GetByUserIdsAsync(ids);
+
+        return users.Select(user => new UsersInBatchDTO(
+            user.Firstname,
+            user.Lastname,
+            user.Email
+        )).ToList();
     }
 }
