@@ -1,3 +1,4 @@
+using CourseService.Application.Common;
 using CourseService.Application.DTOs;
 using CourseService.Application.Interfaces;
 using CourseService.Domain.Entities;
@@ -27,7 +28,7 @@ public class CourseServiceImpl : ICourseService
         return course.Id;
     }
 
-    public async Task<CourseDTO> GetCourseByIdAsync(Guid id)
+    public async Task<CourseDTO?> GetCourseByIdAsync(Guid id)
     {
         var course = await _repository.GetByIdAsync(id);
         if (course == null)
@@ -53,5 +54,34 @@ public class CourseServiceImpl : ICourseService
     {
         var courses = await _repository.GetAllAsync();
         return courses.Select(course => new CourseDTO(course.Id, course.Name, course.Code, course.MaxStudents));
+    }
+
+    public async Task<PaginatedResponse<CourseDTO>> GetAllCoursesWithPaginationAsync(int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var paginatedResult = await _repository.GetAllWithPaginationAsync(page, pageSize);
+
+        var items = paginatedResult.Items.Select(course => new CourseDTO(course.Id, course.Name, course.Code, course.MaxStudents));
+
+        return new PaginatedResponse<CourseDTO>
+        {
+            Items = items,
+            TotalCount = paginatedResult.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<List<CoursesInBatchDTO>> GetByIdsAsync(List<Guid> ids)
+    {
+        var courses = await _repository.GetByCourseIdsAsync(ids);
+
+        return courses.Select(c => new CoursesInBatchDTO(
+            c.Id,
+            c.Name,
+            c.Code
+        )).ToList();
     }
 }

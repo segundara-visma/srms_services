@@ -1,4 +1,6 @@
 using CourseService.Application.Interfaces;
+using CourseService.Application.Common;
+using CourseService.Application.DTOs;
 using CourseService.Domain.Entities;
 using CourseService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +24,7 @@ public class CourseRepository : ICourseRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Course> GetByIdAsync(Guid id)
+    public async Task<Course?> GetByIdAsync(Guid id)
     {
         return await _context.Courses.FindAsync(id);
     }
@@ -36,5 +38,27 @@ public class CourseRepository : ICourseRepository
     public async Task<IEnumerable<Course>> GetAllAsync()
     {
         return await _context.Courses.ToListAsync();
+    }
+
+    public async Task<PaginatedResult<Course>> GetAllWithPaginationAsync(int page, int pageSize)
+    {
+        var query = _context.Courses;
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<Course> { Items = items, TotalCount = totalCount };
+    }
+
+    public async Task<List<Course>> GetByCourseIdsAsync(List<Guid> ids)
+    {
+        return await _context.Courses
+            .AsNoTracking()
+            .Where(c => ids.Contains(c.Id))
+            .ToListAsync();
     }
 }

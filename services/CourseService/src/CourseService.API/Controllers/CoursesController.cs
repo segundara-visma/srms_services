@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CourseService.API.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/courses")]
 [ApiController]
 public class CoursesController : ControllerBase
 {
@@ -67,14 +67,43 @@ public class CoursesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves courses in batch by IDs.
+    /// </summary>
+    [HttpGet("batch")]
+    [Authorize]
+    public async Task<IActionResult> GetCoursesByIds([FromQuery] List<Guid> ids)
+    {
+        if (ids == null || !ids.Any())
+            return BadRequest("Ids are required");
+
+        var courses = await _courseService.GetByIdsAsync(ids);
+        return Ok(courses);
+    }
+
+    /// <summary>
     /// Retrieves all courses.
     /// </summary>
-    /// <returns>A list of all courses.</returns>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{CourseDTO}"/> containing the paginated list of courses.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of courses.</response>
+    /// <response code="400">If the request is invalid.</response>
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetAllCourses()
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAllCourses([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var courses = await _courseService.GetAllCoursesAsync();
-        return Ok(courses);
+        try
+        {
+            var courses = await _courseService.GetAllCoursesWithPaginationAsync(page, pageSize);
+            return Ok(courses);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

@@ -2,6 +2,7 @@ using CourseService.Domain.Entities;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using CourseService.Application.Common;
 using CourseService.Application.DTOs;
 
 namespace CourseService.Application.Interfaces;
@@ -14,7 +15,9 @@ public interface ICourseService
     //Task<IEnumerable<Course>> GetAllCoursesAsync();
 
     Task<Guid> CreateCourseAsync(CreateCourseDTO dto);
-    Task<CourseDTO> GetCourseByIdAsync(Guid id);
+    Task<CourseDTO?> GetCourseByIdAsync(Guid id);
     Task UpdateCourseAsync(Guid id, UpdateCourseDTO dto);
     Task<IEnumerable<CourseDTO>> GetAllCoursesAsync();
+    Task<PaginatedResponse<CourseDTO>> GetAllCoursesWithPaginationAsync(int page, int pageSize);
+    Task<List<CoursesInBatchDTO>> GetByIdsAsync(List<Guid> ids);
 }
