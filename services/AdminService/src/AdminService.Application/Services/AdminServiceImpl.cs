@@ -1,4 +1,5 @@
 using AdminService.Application.Interfaces;
+using AdminService.Application.Common;
 using AdminService.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -80,7 +81,8 @@ public class AdminServiceImpl : IAdminService
 
     public async Task<SystemOverviewDTO> GetSystemOverviewAsync()
     {
-        var tutorsTask = _tutorServiceClient.GetAllTutorsAsync();
+        //var tutorsTask = _tutorServiceClient.GetAllTutorsAsync();
+        var tutorsTask = _userServiceClient.GetAllUsersByRoleAsync("Tutor");
         var studentsTask = _userServiceClient.GetAllUsersByRoleAsync("Student");
         var gradesTask = _gradeServiceClient.GetAllGradesAsync();
         var coursesTask = _courseServiceClient.GetAllCoursesAsync();
@@ -125,28 +127,28 @@ public class AdminServiceImpl : IAdminService
         return new AdminDTO(user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile);
     }
 
-    public async Task<AdminDTO> UpdateAdminAsync(Guid userId, UpdateRequest request)
+    public async Task<AdminDTO> UpdateAdminAsync(Guid userId, UpdateRequestDTO request)
     {
         var user = await _userServiceClient.UpdateUserAsync(userId, request);
         if (user == null)
             throw new ArgumentException($"Update request failed.");
 
-        var profile = new Profile
-        {
-            Address = request.Address,
-            Phone = request.Phone,
-            City = request.City,
-            State = request.State,
-            ZipCode = request.ZipCode,
-            Country = request.Country,
-            Nationality = request.Nationality,
-            Bio = request.Bio,
-            FacebookUrl = request.FacebookUrl,
-            TwitterUrl = request.TwitterUrl,
-            LinkedInUrl = request.LinkedInUrl,
-            InstagramUrl = request.InstagramUrl,
-            WebsiteUrl = request.WebsiteUrl
-        };
+        var profile = new ProfileDTO
+        (
+            request.Address,
+            request.Phone,
+            request.City,
+            request.State,
+            request.ZipCode,
+            request.Country,
+            request.Nationality,
+            request.Bio,
+            request.FacebookUrl,
+            request.TwitterUrl,
+            request.LinkedInUrl,
+            request.InstagramUrl,
+            request.WebsiteUrl
+        );
 
         return new AdminDTO(user.Id, user.FirstName, user.LastName, user.Email, user.Role, profile);
     }

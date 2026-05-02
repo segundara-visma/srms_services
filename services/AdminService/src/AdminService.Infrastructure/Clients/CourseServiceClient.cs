@@ -1,5 +1,6 @@
 using AdminService.Application.Interfaces;
 using AdminService.Application.Configuration;
+using AdminService.Application.Common;
 using AdminService.Application.DTOs;
 using System;
 using System.Collections.Generic;

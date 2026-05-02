@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using AdminService.Application.Configuration;
+using AdminService.Application.Common;
 using AdminService.Application.DTOs;
 using Microsoft.Extensions.Options;
 using System;
@@ -110,7 +111,7 @@ public class UserServiceClient : IUserServiceClient
     }
 
     // Method to make requests to the UserService using the token
-    public async Task<AdminDTO> GetUserByIdAsync(Guid userId)
+    public async Task<AdminDTO?> GetUserByIdAsync(Guid userId)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
@@ -127,7 +128,7 @@ public class UserServiceClient : IUserServiceClient
         return null;
     }
 
-    public async Task<AdminDTO> UpdateUserAsync(Guid userId, UpdateRequest user)
+    public async Task<AdminDTO?> UpdateUserAsync(Guid userId, UpdateRequestDTO user)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 

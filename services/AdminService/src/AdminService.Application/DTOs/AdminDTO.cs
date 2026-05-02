@@ -1,3 +1,3 @@
 namespace AdminService.Application.DTOs;
 
-public record AdminDTO(Guid Id, string FirstName, string LastName, string Email, string Role, Profile? Profile);
+public record AdminDTO(Guid Id, string FirstName, string LastName, string Email, string Role, ProfileDTO? Profile);

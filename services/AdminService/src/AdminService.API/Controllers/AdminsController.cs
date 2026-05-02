@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AdminService.Application.Interfaces;
+using AdminService.Application.Common;
 using AdminService.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace AdminService.API.Controllers;
 /// Controller for handling administrative operations, restricted to Auth0-authenticated admin users.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/admins")]
 [Authorize(Roles = "Admin")]
 public class AdminsController : ControllerBase
 {
@@ -27,31 +28,6 @@ public class AdminsController : ControllerBase
     {
         _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
     }
-
-    ///// <summary>
-    ///// Retrieves all users with the specified role.
-    ///// </summary>
-    ///// <param name="role">The role of the users to retrieve (e.g., "Tutor", "Student").</param>
-    ///// <returns>
-    ///// An <see cref="IEnumerable{UserDTO}"/> containing the users with the specified role.
-    ///// </returns>
-    ///// <response code="200">Returns the list of users.</response>
-    ///// <response code="400">If the role is invalid.</response>
-    //[HttpGet("users/by-role")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsersByRoleAsync([FromQuery] string role)
-    //{
-    //    try
-    //    {
-    //        var users = await _adminService.GetAllUsersByRoleAsync(role);
-    //        return Ok(users);
-    //    }
-    //    catch (ArgumentException ex)
-    //    {
-    //        return BadRequest(new { message = ex.Message });
-    //    }
-    //}
 
     /// <summary>
     /// Retrieves all users with the specified role.
@@ -97,7 +73,6 @@ public class AdminsController : ControllerBase
         try
         {
             var userId = await _adminService.CreateUserAsync(request.FirstName, request.LastName, request.Email, request.Password, request.Role);
-            //return CreatedAtAction(nameof(CreateUserAsync), new { id = userId }, userId);
             return Created(userId.ToString(), userId); // Returns 201 with the userId in the body
         }
         catch (ArgumentException ex)
@@ -145,7 +120,7 @@ public class AdminsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequest dto)
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequestDTO dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();

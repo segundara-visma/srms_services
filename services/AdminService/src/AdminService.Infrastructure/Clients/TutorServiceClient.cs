@@ -1,5 +1,6 @@
 using AdminService.Application.Interfaces;
 using AdminService.Application.Configuration;
+using AdminService.Application.Common;
 using AdminService.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -43,19 +44,19 @@ public class TutorServiceClient : ITutorServiceClient
         throw new Exception($"Failed to obtain Auth0 OAuth2 token: {tokenResponse.StatusCode}");
     }
 
-    public async Task<IEnumerable<TutorDTO>> GetAllTutorsAsync()
-    {
-        var accessToken = await GetAuth0OAuth2TokenAsync();
-        var request = new HttpRequestMessage(HttpMethod.Get, "api/s2s/tutors");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        var response = await _httpClient.SendAsync(request);
-        if (response.IsSuccessStatusCode)
-        {
-            var content = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<IEnumerable<TutorDTO>>(content);
-        }
-        throw new Exception($"Failed to get all tutors: {response.StatusCode}");
-    }
+    //public async Task<IEnumerable<TutorDTO>> GetAllTutorsAsync()
+    //{
+    //    var accessToken = await GetAuth0OAuth2TokenAsync();
+    //    var request = new HttpRequestMessage(HttpMethod.Get, "api/s2s/tutors");
+    //    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    //    var response = await _httpClient.SendAsync(request);
+    //    if (response.IsSuccessStatusCode)
+    //    {
+    //        var content = await response.Content.ReadAsStringAsync();
+    //        return JsonConvert.DeserializeObject<IEnumerable<TutorDTO>>(content);
+    //    }
+    //    throw new Exception($"Failed to get all tutors: {response.StatusCode}");
+    //}
 
     public async Task CreateTutorAsync(Guid userId)
     {

@@ -7,7 +7,7 @@ namespace AdminService.Application.Interfaces;
 
 public interface ITutorServiceClient
 {
-    Task<IEnumerable<TutorDTO>> GetAllTutorsAsync();
+    //Task<IEnumerable<TutorDTO>> GetAllTutorsAsync();
     Task CreateTutorAsync(Guid userId);
     Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId);
 }
