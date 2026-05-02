@@ -37,7 +37,7 @@ public class GetReportByIdTests : BaseTest
             }
         };
         ReportRepositoryMock.Setup(repo => repo.GetByIdAsync(reportId))
-            .Returns(Task.FromResult(report));
+            .ReturnsAsync(report);
 
         // Act
         var result = await ReportService.GetReportByIdAsync(reportId);
@@ -58,7 +58,7 @@ public class GetReportByIdTests : BaseTest
         // Arrange
         var reportId = Guid.NewGuid();
         ReportRepositoryMock.Setup(repo => repo.GetByIdAsync(reportId))
-            .Returns(Task.FromResult<Report>(null));
+            .ReturnsAsync((Report?)null);
 
         // Act
         var result = await ReportService.GetReportByIdAsync(reportId);
