@@ -29,6 +29,9 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var secretKey = builder.Configuration["JwtSettings:SecretKey"]
+        ?? throw new InvalidOperationException("JwtSettings:SecretKey is missing");
+
     // Disable automatic claim type mapping
     // so as to avoid "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" for RoleClaimType
     options.MapInboundClaims = false;
@@ -39,7 +42,8 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"])),
+
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         RoleClaimType = "role"
     };
 
@@ -127,6 +131,31 @@ builder.Services.AddSwaggerGen(c =>
         Title = "ReportService API",
         Version = "v1",
         Description = "API documentation for the ReportService"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {your JWT token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
     });
 });
 

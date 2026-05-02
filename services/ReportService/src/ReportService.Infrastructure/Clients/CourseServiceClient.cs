@@ -1,5 +1,6 @@
 using ReportService.Application.Interfaces;
 using ReportService.Application.Configuration;
+using ReportService.Application.Common;
 using ReportService.Application.DTOs;
 using System;
 using System.Collections.Generic;

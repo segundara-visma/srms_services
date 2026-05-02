@@ -1,4 +1,5 @@
 using ReportService.Application.Interfaces;
+using ReportService.Application.Common;
 using ReportService.Application.DTOs;
 using ReportService.Domain.Entities;
 using System;
@@ -93,27 +94,28 @@ public class ReportServiceImpl : IReportService
         return await MapToDTO(report);
     }
 
-    private async Task<ReportDTO> MapToDTO(Report report)
+    private Task<ReportDTO> MapToDTO(Report report)
     {
-        var details = await Task.WhenAll(report.ReportDetails.Select(async td =>
-            new ReportDetailDTO
-            {
-                CourseId = td.CourseId,
-                Grade = td.Grade,
-                CourseTitle = td.CourseTitle,
-                Credits = td.Credits,
-                Status = td.Status
-            }));
+        var details = report.ReportDetails
+            .Select(td => new ReportDetailDTO(
+                td.CourseId,
+                td.Grade ?? 0,
+                td.CourseTitle,
+                td.Credits,
+                td.Status
+            ))
+            .ToList();
 
-        return new ReportDTO
-        {
-            Id = report.Id,
-            StudentId = report.StudentId,
-            GeneratedAt = report.GeneratedAt,
-            GPA = report.GPA,
-            Status = report.Status,
-            Details = details
-        };
+        var dto = new ReportDTO(
+            report.Id,
+            report.StudentId,
+            report.GeneratedAt,
+            report.GPA,
+            report.Status,
+            details
+        );
+
+        return Task.FromResult(dto);
     }
 
     private decimal CalculateGPA(IEnumerable<GradeDTO> grades)

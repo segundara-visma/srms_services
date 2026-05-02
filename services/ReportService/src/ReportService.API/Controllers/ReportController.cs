@@ -11,7 +11,7 @@ namespace ReportService.API.Controllers;
 /// Controller for managing student academic reports, such as transcripts.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/reports")]
 public class ReportController : ControllerBase
 {
     private readonly IReportService _reportService;
