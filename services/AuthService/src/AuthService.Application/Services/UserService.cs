@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using AuthService.Application.Configuration;
+using AuthService.Application.Common;
 using AuthService.Application.DTOs;
 using Microsoft.Extensions.Options;
 
@@ -47,7 +48,7 @@ namespace AuthService.Application.Services
         }
 
         // Method to make authenticated requests to the UserService using the token
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
             var accessToken = await GetAuth0OAuth2TokenAsync();  // Get the OAuth2 token from Okta
 

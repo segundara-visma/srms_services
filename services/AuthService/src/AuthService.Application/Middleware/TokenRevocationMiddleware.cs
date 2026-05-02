@@ -19,7 +19,8 @@ public class TokenRevocationMiddleware
     {
         // Skip token validation for login and logout endpoints
         if (context.Request.Path.StartsWithSegments("/api/Auth/login") ||
-            context.Request.Path.StartsWithSegments("/api/Auth/logout"))
+            context.Request.Path.StartsWithSegments("/api/Auth/logout") ||
+            context.Request.Path.StartsWithSegments("/api/Auth/refresh-token"))
         {
             await _next(context);  // Skip token revocation check for login route
             return;

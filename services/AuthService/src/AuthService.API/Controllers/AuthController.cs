@@ -10,7 +10,8 @@ namespace AuthService.Api.Controllers
     /// <summary>
     /// Controller for handling user-related API operations.
     /// </summary>
-    [Route("api/[controller]")]
+    //[Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -35,7 +36,7 @@ namespace AuthService.Api.Controllers
         /// <param name="request">Object containing the user's email and password.</param>
         /// <returns>A login-response object.</returns>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO request)
         {
             try
             {
