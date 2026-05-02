@@ -1,10 +1,9 @@
 using FluentAssertions;
-using GradeService.Application.DTOs;
-using GradeService.Application.Services;
 using GradeService.Domain.Entities;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -24,7 +23,7 @@ public class GetAllGradesTests : BaseTest
                 StudentId = Guid.NewGuid(),
                 CourseId = Guid.NewGuid(),
                 GradeValue = 90.0m,
-                DateGraded = DateTime.UtcNow,
+                GradedAt = DateTime.UtcNow,
                 Comments = "Excellent"
             },
             new Grade
@@ -33,26 +32,33 @@ public class GetAllGradesTests : BaseTest
                 StudentId = Guid.NewGuid(),
                 CourseId = Guid.NewGuid(),
                 GradeValue = 75.5m,
-                DateGraded = DateTime.UtcNow,
+                GradedAt = DateTime.UtcNow,
                 Comments = "Needs improvement"
             }
         };
-        GradeRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(grades);
+
+        GradeRepositoryMock
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(grades);
 
         // Act
-        var result = await GradeService.GetAllGradesAsync();
+        var result = (await GradeService.GetAllGradesAsync()).ToList();
 
         // Assert
         result.Should().HaveCount(2);
         result.First().GradeValue.Should().Be(90.0m);
         result.Last().GradeValue.Should().Be(75.5m);
+        result.First().GradedAt.Should().Be(grades[0].GradedAt);
+        result.Last().GradedAt.Should().Be(grades[1].GradedAt);
     }
 
     [Fact]
     public async Task GetAllGradesAsync_WhenNoGradesExist_ReturnsEmptyList()
     {
         // Arrange
-        GradeRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Grade>());
+        GradeRepositoryMock
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(new List<Grade>());
 
         // Act
         var result = await GradeService.GetAllGradesAsync();
