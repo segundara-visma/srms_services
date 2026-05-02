@@ -53,14 +53,4 @@ public class ServiceToServiceStudentsController : ControllerBase
             return StatusCode(500, new { message = "Internal server error", details = ex.Message });
         }
     }
-
-    /// <summary>
-    /// Retrieves all students.
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetAllStudents()
-    {
-        var students = await _studentService.GetAllStudentsAsync();
-        return Ok(students);
-    }
 }

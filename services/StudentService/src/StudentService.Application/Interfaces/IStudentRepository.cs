@@ -7,10 +7,10 @@ namespace StudentService.Application.Interfaces;
 
 public interface IStudentRepository
 {
-    Task<Student> GetByIdAsync(Guid id);
-    Task<Student> GetByUserIdAsync(Guid userId);
+    Task<Student?> GetByIdAsync(Guid id);
+    Task<Student?> GetByUserIdAsync(Guid userId);
     Task AddAsync(Student student);
     Task UpdateAsync(Student student);
-    //Task DeleteAsync(Guid studentId);
     Task<IEnumerable<Student>> GetAllAsync();
+    Task<List<Student>> GetByUserIdsAsync(List<Guid> userIds);
 }

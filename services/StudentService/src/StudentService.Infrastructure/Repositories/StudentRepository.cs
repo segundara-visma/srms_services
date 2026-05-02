@@ -16,13 +16,13 @@ public class StudentRepository : IStudentRepository
         _context = context;
     }
 
-    public async Task<Student> GetByIdAsync(Guid id)
+    public async Task<Student?> GetByIdAsync(Guid id)
     {
         return await _context.Students
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
-    public async Task<Student> GetByUserIdAsync(Guid userId)
+    public async Task<Student?> GetByUserIdAsync(Guid userId)
     {
         return await _context.Students
             .FirstOrDefaultAsync(s => s.UserId == userId);
@@ -43,6 +43,14 @@ public class StudentRepository : IStudentRepository
     public async Task<IEnumerable<Student>> GetAllAsync()
     {
         return await _context.Students
+            .ToListAsync();
+    }
+
+    public async Task<List<Student>> GetByUserIdsAsync(List<Guid> userIds)
+    {
+        return await _context.Students
+            .AsNoTracking()
+            .Where(s => userIds.Contains(s.UserId))
             .ToListAsync();
     }
 }

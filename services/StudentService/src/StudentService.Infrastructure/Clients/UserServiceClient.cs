@@ -1,35 +1,35 @@
 using StudentService.Application.Interfaces;
-using StudentService.Domain.Entities;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Net.Http.Headers;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using StudentService.Application.Configuration;
+using StudentService.Application.Common;
 using StudentService.Application.DTOs;
+
 using Microsoft.Extensions.Options;
+
 using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace StudentService.Infrastructure.Clients;
 
 public class UserServiceClient : IUserServiceClient
 {
-    private readonly HttpClient _httpClient; // For UserService requests
-    private readonly HttpClient _auth0HttpClient; // For Auth0 token requests
+    private readonly HttpClient _httpClient;
+    private readonly HttpClient _auth0HttpClient;
     private readonly Auth0Settings _auth0Settings;
 
     public UserServiceClient(HttpClient httpClient, IOptions<Auth0Settings> auth0Settings)
     {
         _httpClient = httpClient;
         _auth0Settings = auth0Settings.Value;
-
-        // Create a separate HttpClient for Auth0 token requests
         _auth0HttpClient = new HttpClient();
     }
 
-    // Get OAuth2 token from Auth0
     private async Task<string> GetAuth0OAuth2TokenAsync()
     {
         var tokenRequest = new Dictionary<string, string>
@@ -40,20 +40,24 @@ public class UserServiceClient : IUserServiceClient
             { "audience", _auth0Settings.Audience }
         };
 
-        // Use the separate HttpClient for Auth0 requests
-        var tokenResponse = await _auth0HttpClient.PostAsync(_auth0Settings.TokenUrl, new FormUrlEncodedContent(tokenRequest));
+        var response = await _auth0HttpClient.PostAsync(
+            _auth0Settings.TokenUrl,
+            new FormUrlEncodedContent(tokenRequest));
 
-        if (tokenResponse.IsSuccessStatusCode)
-        {
-            var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await tokenResponse.Content.ReadAsStringAsync());
-            return tokenData.AccessToken;
-        }
+        var content = await response.Content.ReadAsStringAsync();
 
-        throw new Exception($"Failed to obtain Auth0 OAuth2 token: {tokenResponse.StatusCode} - {await tokenResponse.Content.ReadAsStringAsync()}");
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Auth0 token failed: {response.StatusCode} - {content}");
+
+        var tokenData = JsonConvert.DeserializeObject<TokenResponse>(content);
+
+        if (tokenData?.AccessToken == null)
+            throw new Exception("Auth0 returned invalid token response.");
+
+        return tokenData.AccessToken;
     }
 
-    // Method to make requests to the UserService using the token
-    public async Task<UserDTO> GetUserByIdAsync(Guid userId)
+    public async Task<UserDTO?> GetUserByIdAsync(Guid userId)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
@@ -62,45 +66,69 @@ public class UserServiceClient : IUserServiceClient
 
         var response = await _httpClient.SendAsync(request);
 
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<UserDTO>();
-        }
+        if (!response.IsSuccessStatusCode)
+            return null;
 
-        return null;
+        return await response.Content.ReadFromJsonAsync<UserDTO>();
     }
 
-    public async Task<UserDTO> UpdateUserAsync(Guid userId, UpdateRequest user)
+    public async Task<UserDTO?> UpdateUserAsync(Guid userId, UpdateRequestDTO user)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
         var request = new HttpRequestMessage(HttpMethod.Put, $"api/s2s/users/{userId}")
         {
-            Content = new StringContent(JsonConvert.SerializeObject(user), System.Text.Encoding.UTF8, "application/json")
+            Content = new StringContent(
+                JsonConvert.SerializeObject(user),
+                Encoding.UTF8,
+                "application/json")
         };
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
         var response = await _httpClient.SendAsync(request);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<UserDTO>();
-        }
-        throw new Exception($"Failed to update user: {response.StatusCode}");
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"Failed to update user: {response.StatusCode}");
+
+        return await response.Content.ReadFromJsonAsync<UserDTO>();
     }
 
-    public async Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role)
+    public async Task<PaginatedResponse<UserDTO>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
     {
+        if (string.IsNullOrWhiteSpace(role))
+            throw new ArgumentException("Role cannot be empty.", nameof(role));
+
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={role}");
+        var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"api/s2s/users/by-role?role={Uri.EscapeDataString(role)}&page={page}&pageSize={pageSize}");
+
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);
 
-        if (response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<UserDTO>>();
+            return new PaginatedResponse<UserDTO>
+            {
+                Items = Enumerable.Empty<UserDTO>(),
+                TotalCount = 0,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
-        return null;
+        var result =
+            await response.Content.ReadFromJsonAsync<PaginatedResponse<UserDTO>>();
+
+        return result ?? new PaginatedResponse<UserDTO>
+        {
+            Items = Enumerable.Empty<UserDTO>(),
+            TotalCount = 0,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

@@ -6,5 +6,5 @@ namespace StudentService.Application.Interfaces;
 
 public interface ICourseServiceClient
 {
-    Task<CourseDTO> GetCourseByIdAsync(Guid courseId);
+    Task<CourseDTO?> GetCourseByIdAsync(Guid courseId);
 }
