@@ -10,7 +10,6 @@ namespace AuthService.Api.Controllers
     /// <summary>
     /// Controller for handling user-related API operations.
     /// </summary>
-    //[Route("api/[controller]")]
     [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
