@@ -37,53 +37,83 @@ public class GetEnrollmentTests : BaseTest
 
     [Fact]
     public async Task GetEnrollmentsByStudentAsync_ValidStudent_ReturnsEnrollments()
-    {
-        // Arrange
-        var studentId = Guid.NewGuid();
-        var enrollments = new List<Enrollment>
+        {
+            // Arrange
+            var studentId = Guid.NewGuid();
+
+            var enrollments = new List<Enrollment>
         {
             CreateSampleEnrollment(studentId, Guid.NewGuid())
         };
-        MockRepository.Setup(x => x.GetByStudentIdAsync(studentId))
-            .ReturnsAsync(enrollments);
-        MockUserClient.Setup(x => x.GetUserByIdAsync(studentId))
+
+        var paginatedResult = new PaginatedResult<Enrollment>
+        {
+            Items = enrollments,
+            TotalCount = enrollments.Count
+        };
+
+        MockRepository
+            .Setup(x => x.GetByStudentIdAsync(studentId, 1, 10))
+            .ReturnsAsync(paginatedResult);
+
+        MockUserClient
+            .Setup(x => x.GetUserByIdAsync(studentId))
             .ReturnsAsync(CreateSampleUser(studentId));
 
         // Act
-        var result = await Service.GetEnrollmentsByStudentAsync(studentId);
+        var result = await Service.GetEnrollmentsByStudentAsync(studentId, 1, 10);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(studentId, result.First().StudentId);
-        Assert.Equal(enrollments[0].EnrollmentDate, result.First().EnrollmentDate);
-        Assert.Equal(enrollments[0].Status.ToString(), result.First().Status); // Compare string representation
-        MockRepository.Verify(x => x.GetByStudentIdAsync(studentId), Times.Once());
+        Assert.Single(result.Items);
+
+        var item = result.Items.First();
+
+        Assert.Equal(studentId, item.StudentId);
+        Assert.Equal(enrollments[0].EnrollmentDate, item.EnrollmentDate);
+        Assert.Equal(enrollments[0].Status.ToString(), item.Status);
+
+        MockRepository.Verify(x => x.GetByStudentIdAsync(studentId, 1, 10), Times.Once());
     }
 
     [Fact]
     public async Task GetEnrollmentsByCourseAsync_ValidCourse_ReturnsEnrollments()
-    {
-        // Arrange
-        var courseId = Guid.NewGuid();
-        var enrollments = new List<Enrollment>
+        {
+            // Arrange
+            var courseId = Guid.NewGuid();
+
+            var enrollments = new List<Enrollment>
         {
             CreateSampleEnrollment(Guid.NewGuid(), courseId)
         };
-        MockRepository.Setup(x => x.GetByCourseIdAsync(courseId))
-            .ReturnsAsync(enrollments);
-        MockCourseClient.Setup(x => x.GetCourseByIdAsync(courseId))
+
+        var paginatedResult = new PaginatedResult<Enrollment>
+        {
+            Items = enrollments,
+            TotalCount = enrollments.Count
+        };
+
+        MockRepository
+            .Setup(x => x.GetByCourseIdAsync(courseId, 1, 10))
+            .ReturnsAsync(paginatedResult);
+
+        MockCourseClient
+            .Setup(x => x.GetCourseByIdAsync(courseId))
             .ReturnsAsync(CreateSampleCourse(courseId));
 
         // Act
-        var result = await Service.GetEnrollmentsByCourseAsync(courseId);
+        var result = await Service.GetEnrollmentsByCourseAsync(courseId, 1, 10);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(courseId, result.First().CourseId);
-        Assert.Equal(enrollments[0].EnrollmentDate, result.First().EnrollmentDate);
-        Assert.Equal(enrollments[0].Status.ToString(), result.First().Status); // Compare string representation
-        MockRepository.Verify(x => x.GetByCourseIdAsync(courseId), Times.Once());
+        Assert.Single(result.Items);
+
+        var item = result.Items.First();
+
+        Assert.Equal(courseId, item.CourseId);
+        Assert.Equal(enrollments[0].EnrollmentDate, item.EnrollmentDate);
+        Assert.Equal(enrollments[0].Status.ToString(), item.Status);
+
+        MockRepository.Verify(x => x.GetByCourseIdAsync(courseId, 1, 10), Times.Once());
     }
 }
