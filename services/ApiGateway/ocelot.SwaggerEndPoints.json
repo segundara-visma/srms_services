@@ -1,0 +1,94 @@
+{
+"SwaggerEndPoints": [
+    {
+        "Key": "auth",
+        "Config": [
+            {
+                "Name": "Auth Service",
+                "Version": "v1",
+                "Url": "http://authservice:5001/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "users",
+        "Config": [
+            {
+                "Name": "User Service",
+                "Version": "v1",
+                "Url": "http://userservice:5002/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "courses",
+        "Config": [
+            {
+                "Name": "Course Service",
+                "Version": "v1",
+                "Url": "http://courseservice:5003/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "student",
+        "Config": [
+            {
+                "Name": "Student Service",
+                "Version": "v1",
+                "Url": "http://studentservice:5004/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "enrollment",
+        "Config": [
+            {
+                "Name": "Enrollment Service",
+                "Version": "v1",
+                "Url": "http://enrollmentservice:5005/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "grade",
+        "Config": [
+            {
+                "Name": "Grade Service",
+                "Version": "v1",
+                "Url": "http://gradeservice:5006/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "report",
+        "Config": [
+            {
+                "Name": "Report Service",
+                "Version": "v1",
+                "Url": "http://reportservice:5007/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "tutor",
+        "Config": [
+            {
+                "Name": "Tutor Service",
+                "Version": "v1",
+                "Url": "http://tutorservice:5008/swagger/v1/swagger.json"
+            }
+        ]
+    },
+    {
+        "Key": "admin",
+        "Config": [
+            {
+                "Name": "Admin Service",
+                "Version": "v1",
+                "Url": "http://adminservice:5009/swagger/v1/swagger.json"
+            }
+        ]
+    }
+]
+}

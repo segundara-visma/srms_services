@@ -1,83 +1,131 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using ApiGateway.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using MMLib.SwaggerForOcelot.DependencyInjection;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using System.Text;
-using System.Threading.Tasks;
-using ApiGateway.Services;
-using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Redis as distributed cache
+#region Configuration
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("ocelot.SwaggerEndPoints.json", optional: false, reloadOnChange: true);
+#endregion
+
+#region Redis Cache
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration["Redis:ConnectionString"];
-    options.InstanceName = "ApiGateway_";
+    options.Configuration = builder.Configuration["Redis:ConnectionString"]
+        ?? throw new InvalidOperationException("Redis connection string is missing.");
+    options.InstanceName = builder.Configuration["Redis:InstanceName"] ?? "ApiGateway_";
 });
+#endregion
 
-// Register TokenValidationService
+#region Application Services
 builder.Services.AddSingleton<TokenValidationService>();
+builder.Services.AddHttpClient<EnrollmentAggregationService>();
+builder.Services.AddHttpClient<TutorCoursesAggregationService>();
+builder.Services.AddHttpClient<GradeAggregationService>();
 
-// Add Ocelot
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
-builder.Services.AddOcelot();
+builder.Services.AddControllers();
+#endregion
 
-// Configure JWT authentication with custom token validation
-builder.Services.AddAuthentication(options =>
+#region Swagger & Ocelot Integration
+builder.Services.AddSwaggerForOcelot(builder.Configuration);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer("JwtBearer", options =>
-{
-    options.MapInboundClaims = false;
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"])),
-        RoleClaimType = "role"
-    };
+        Title = "SRMS API Gateway",
+        Version = "v1",
+        Description = "Unified API Gateway for Student Registration & Management System"
+    });
 
-    // Add custom token validation to check for revocation
-    options.Events = new JwtBearerEvents
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        OnTokenValidated = async context =>
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter 'Bearer' followed by your JWT token"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            var tokenValidationService = context.HttpContext.RequestServices.GetRequiredService<TokenValidationService>();
-            var token = context.SecurityToken as JwtSecurityToken;
-            var jti = token?.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
-
-            if (string.IsNullOrEmpty(jti))
+            new OpenApiSecurityScheme
             {
-                context.Fail("Token ID (jti) missing from the token.");
-                return;
-            }
-
-            var isRevoked = await tokenValidationService.IsTokenRevokedAsync(jti);
-            if (isRevoked)
-            {
-                context.Fail("Token has been revoked.");
-            }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
         }
-    };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
-            return Task.CompletedTask;
-        }
-    };
+    });
 });
+#endregion
 
-// Add CORS
+#region Authentication (JWT)
+builder.Services
+    .AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.MapInboundClaims = false;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"] ?? string.Empty)),
+            RoleClaimType = "role"
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var authHeader = context.HttpContext.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(authHeader))
+                {
+                    var tokenString = authHeader.ToString().Substring("Bearer ".Length).Trim();
+                    try
+                    {
+                        var tokenHandler = new JwtSecurityTokenHandler();
+                        var token = tokenHandler.ReadToken(tokenString) as JwtSecurityToken;
+
+                        if (token != null)
+                        {
+                            var tokenId = token.Id;
+                            var revocationService = context.HttpContext.RequestServices
+                                .GetRequiredService<TokenValidationService>();
+
+                            if (await revocationService.IsTokenRevokedAsync(tokenId))
+                            {
+                                context.Fail("Token is revoked.");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Token validation error: {ex.Message}");
+                    }
+                }
+            }
+        };
+    });
+#endregion
+
+#region CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -87,12 +135,46 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+#endregion
 
+#region Ocelot
+builder.Services.AddOcelot(builder.Configuration);
+#endregion
+
+// ====================== Build App ======================
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+
+    app.UseSwaggerForOcelotUI(
+        ocelotOptions =>
+        {
+            ocelotOptions.PathToSwaggerGenerator = "/swagger/docs";
+        },
+        swaggerUiOptions =>
+        {
+            swaggerUiOptions.RoutePrefix = string.Empty;   // Swagger available at root: http://localhost:5000/
+            swaggerUiOptions.DocumentTitle = "SRMS API Gateway - Unified Documentation";
+
+            // Main merged document
+            swaggerUiOptions.SwaggerEndpoint("/swagger/v1/swagger.json", "Gateway Aggregation Endpoints API");
+        });
+}
+
 app.UseCors("AllowAll");
+
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-await app.UseOcelot();
+
+// Map custom aggregation controllers
+app.MapControllers();
+
+// Ocelot handles all /api routes
+app.MapWhen(context => context.Request.Path.StartsWithSegments("/api"),
+    appBuilder => appBuilder.UseOcelot().Wait());
 
 app.Run();
