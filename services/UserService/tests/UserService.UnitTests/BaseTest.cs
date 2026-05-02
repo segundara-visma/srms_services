@@ -1,11 +1,13 @@
 using Moq;
 using UserService.Application.Interfaces;
 using UserService.Application.Services;
+using UserService.Application.DTOs;
 using UserService.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UserService.Application.Common;
 
 namespace UserService.UnitTests
 {
@@ -20,7 +22,6 @@ namespace UserService.UnitTests
             _userService = new UserServices(_userRepositoryMock.Object);
         }
 
-        // Helper function to create a test user with initialized Role and Profile
         protected User CreateTestUser(Guid? userId = null)
         {
             return new User
@@ -30,50 +31,68 @@ namespace UserService.UnitTests
                 Firstname = "Test",
                 Lastname = "User",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-                RoleId = 1, // int for RoleId
-                Role = new Role { Id = 1, Name = "Student" }, // Initialize Role
-                Profile = new Profile { Address = "123 Test St." } // Initialize Profile
+                RoleId = 1,
+                Role = new Role { Id = 1, Name = "Student" },
+                Profile = new Profile
+                {
+                    Address = "123 Test St.",
+                    Phone = "123456",
+                    City = "TestCity"
+                }
             };
         }
 
-        // Helper function to create a test role
         protected Role CreateTestRole(string roleName = "Student")
         {
-            return new Role { Id = 1, Name = roleName }; // int for Role.Id
+            return new Role { Id = 1, Name = roleName };
         }
 
-        // Mock repository methods
-        protected void MockGetByIdAsync(User user)
+        protected void MockGetByIdAsync(User? user)
         {
-            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(user.Id)).ReturnsAsync(user);
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync(user);
         }
 
-        protected void MockGetByEmailAsync(User user)
+        protected void MockGetByEmailAsync(User? user)
         {
-            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(user.Email)).ReturnsAsync(user);
+            _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync(user);
         }
 
         protected void MockAddUserAsync()
         {
-            _userRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<User>())).Returns(Task.CompletedTask);
+            _userRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<User>()))
+                .Returns(Task.CompletedTask);
         }
 
-        protected void MockGetRoleByNameAsync(Role role)
+        protected void MockGetRoleByNameAsync(Role? role)
         {
-            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(role.Name)).ReturnsAsync(role);
+            _userRepositoryMock.Setup(repo => repo.GetRoleByNameAsync(It.IsAny<string>()))
+                .ReturnsAsync(role);
         }
 
-        protected void MockUpdateUserAsync(User user)
+        protected void MockUpdateUserAsync()
         {
-            _userRepositoryMock.Setup(repo => repo.UpdateAsync(user)).Returns(Task.CompletedTask);
+            _userRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<User>()))
+                .Returns(Task.CompletedTask);
         }
 
-        protected void MockGetUsersByRoleIdAsync(int roleId, IEnumerable<User> users, int totalCount, int page = 1, int pageSize = 10)
+        protected void MockGetUsersByRoleIdAsync(int roleId, IEnumerable<User> users)
         {
-            var paginatedUsers = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            var paginatedResult = new PaginatedResult<User> { Items = paginatedUsers, TotalCount = totalCount };
+            _userRepositoryMock.Setup(repo => repo.GetUsersByRoleIdAsync(roleId))
+                .ReturnsAsync(users.ToList());
+        }
+
+        protected void MockGetUsersByRoleIdPaginated(int roleId, IEnumerable<User> users, int totalCount, int page, int pageSize)
+        {
+            var result = new PaginatedResult<User>
+            {
+                Items = users.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                TotalCount = totalCount
+            };
+
             _userRepositoryMock.Setup(repo => repo.GetUsersByRoleIdAsync(roleId, page, pageSize))
-                .Returns(Task.FromResult(paginatedResult));
+                .ReturnsAsync(result);
         }
     }
 }
