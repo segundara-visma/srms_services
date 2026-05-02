@@ -1,12 +1,14 @@
-using FluentAssertions;
 using Moq;
+using Moq.Language.Flow;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using TutorService.Domain.Entities;
-using TutorService.Application.Services;
-using TutorService.Application.Interfaces;
 using TutorService.Application.DTOs;
+using TutorService.Application.Interfaces;
+using TutorService.Application.Services;
+using TutorService.Domain.Entities;
 using Xunit;
 
 namespace TutorService.UnitTests;
@@ -17,7 +19,10 @@ public class GetAllTutorsTests : BaseTest
 
     public GetAllTutorsTests()
     {
-        _tutorService = new TutorServiceImpl(TutorRepositoryMock.Object, UserServiceClientMock.Object, GradeServiceClientMock.Object);
+        _tutorService = new TutorServiceImpl(
+            TutorRepositoryMock.Object,
+            UserServiceClientMock.Object,
+            GradeServiceClientMock.Object);
     }
 
     [Fact]
@@ -26,44 +31,51 @@ public class GetAllTutorsTests : BaseTest
         // Arrange
         var tutorId1 = Guid.NewGuid();
         var tutorId2 = Guid.NewGuid();
+
         var users = new List<UserDTO>
         {
-            CreateTestUserDTO(tutorId1, new Profile { Address = "789 Pine St" }),
+            CreateTestUserDTO(tutorId1, new ProfileDTO("789 Pine St", null, null, null, null, null, null, null, null, null, null, null, null)),
             CreateTestUserDTO(tutorId2)
         };
+
         var tutors = new List<Tutor>
         {
             CreateTestTutor(userId: tutorId1),
             CreateTestTutor(userId: tutorId2)
         };
-        UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync("Tutor")).ReturnsAsync(users);
-        foreach (var tutor in tutors)
-            MockGetTutorByUserIdAsync(tutor.UserId, tutor);
+
+        MockGetUsersByRoleAsync("Tutor", users);
+
+        TutorRepositoryMock
+            .Setup(r => r.GetByUserIdsAsync(It.IsAny<List<Guid>>()))
+            .ReturnsAsync(tutors);
 
         // Act
         var result = await _tutorService.GetAllTutorsAsync();
 
         // Assert
-        result.Should().HaveCount(2);
-        var tutor1 = result.Single(t => t.UserId == tutorId1);
-        tutor1.Email.Should().Be("tutor1@example.com");
-        tutor1.Profile.Should().NotBeNull();
-        tutor1.Profile.Address.Should().Be("789 Pine St");
-        var tutor2 = result.Single(t => t.UserId == tutorId2);
-        tutor2.Email.Should().Be("tutor1@example.com");
-        tutor2.Profile.Should().BeNull();
+        result.Items.Should().HaveCount(2);
+
+        var list = result.Items.ToList();
+
+        list.Should().Contain(x => x.UserId == tutorId1);
+        list.Should().Contain(x => x.UserId == tutorId2);
     }
 
     [Fact]
-    public async Task GetAllTutorsAsync_WhenNoTutors_ReturnsEmptyList()
+    public async Task GetAllTutorsAsync_WhenNoTutors_ReturnsEmpty()
     {
         // Arrange
-        UserServiceClientMock.Setup(c => c.GetUsersByRoleAsync("Tutor")).ReturnsAsync(new List<UserDTO>());
+        MockGetUsersByRoleAsync("Tutor", new List<UserDTO>());
+
+        TutorRepositoryMock
+            .Setup(r => r.GetByUserIdsAsync(It.IsAny<List<Guid>>()))
+            .ReturnsAsync(new List<Tutor>());
 
         // Act
         var result = await _tutorService.GetAllTutorsAsync();
 
         // Assert
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
     }
 }

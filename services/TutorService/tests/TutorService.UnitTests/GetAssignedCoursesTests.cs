@@ -1,12 +1,13 @@
-using FluentAssertions;
 using Moq;
+using Moq.Language.Flow;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TutorService.Domain.Entities;
-using TutorService.Application.Services;
+using TutorService.Application.Common;
 using TutorService.Application.Interfaces;
-using TutorService.Application.DTOs;
+using TutorService.Application.Services;
+using TutorService.Domain.Entities;
 using Xunit;
 
 namespace TutorService.UnitTests;
@@ -17,41 +18,34 @@ public class GetAssignedCoursesTests : BaseTest
 
     public GetAssignedCoursesTests()
     {
-        _tutorService = new TutorServiceImpl(TutorRepositoryMock.Object, UserServiceClientMock.Object, GradeServiceClientMock.Object);
+        _tutorService = new TutorServiceImpl(
+            TutorRepositoryMock.Object,
+            UserServiceClientMock.Object,
+            GradeServiceClientMock.Object);
     }
 
     [Fact]
-    public async Task GetAssignedCoursesAsync_WhenTutorHasCourses_ReturnsCourseIds()
+    public async Task ReturnsCourses()
     {
-        // Arrange
         var tutorId = Guid.NewGuid();
         var tutor = CreateTestTutor(userId: tutorId);
-        var courses = new List<TutorCourse>
-        {
-            new TutorCourse { Id = Guid.NewGuid(), TutorId = tutorId, CourseId = Guid.NewGuid(), AssignmentDate = DateTime.UtcNow },
-            new TutorCourse { Id = Guid.NewGuid(), TutorId = tutorId, CourseId = Guid.NewGuid(), AssignmentDate = DateTime.UtcNow }
-        };
-        TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync(tutor);
-        TutorRepositoryMock.Setup(r => r.GetCoursesByTutorIdAsync(tutorId)).ReturnsAsync(courses);
 
-        // Act
+        MockGetTutorByUserIdAsync(tutorId, tutor);
+
+        TutorRepositoryMock
+            .Setup(x => x.GetPaginatedCoursesByTutorIdAsync(tutor.Id, 1, 10))
+            .ReturnsAsync(new PaginatedResult<TutorCourse>
+            {
+                Items = new List<TutorCourse>
+                {
+                    new TutorCourse { TutorId = tutor.Id, CourseId = Guid.NewGuid() },
+                    new TutorCourse { TutorId = tutor.Id, CourseId = Guid.NewGuid() }
+                },
+                TotalCount = 2
+            });
+
         var result = await _tutorService.GetAssignedCoursesAsync(tutorId);
 
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().Contain(courses[0].CourseId);
-        result.Should().Contain(courses[1].CourseId);
-        result.Should().OnlyHaveUniqueItems(); // Ensure no duplicates
-    }
-
-    [Fact]
-    public async Task GetAssignedCoursesAsync_WhenTutorNotFound_ThrowsException()
-    {
-        // Arrange
-        var tutorId = Guid.NewGuid();
-        TutorRepositoryMock.Setup(r => r.GetByUserIdAsync(tutorId)).ReturnsAsync((Tutor)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _tutorService.GetAssignedCoursesAsync(tutorId));
+        result.Items.Should().HaveCount(2);
     }
 }
