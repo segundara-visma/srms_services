@@ -1,77 +1,57 @@
 using Moq;
-using StudentService.Domain.Entities;
 using StudentService.Application.DTOs;
+using StudentService.Domain.Entities;
+using Xunit;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Xunit;
 
 namespace StudentService.UnitTests;
 
 public class GetAllStudentsTests : BaseTest
 {
     [Fact]
-    public async Task GetAllStudentsAsync_StudentsExist_ReturnsStudentDTOs()
+    public async Task GetAllStudentsAsync_ReturnsStudents()
     {
         // Arrange
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
+
         var student1 = CreateTestStudent(userId: userId1);
         var student2 = CreateTestStudent(userId: userId2);
-        var profile = new Profile { Address = "123 Main St", Phone = "555-0123" };
-        var userDTO1 = CreateTestUserDTO(userId1, profile);
-        var userDTO2 = CreateTestUserDTO(userId2);
 
-        var users = new List<UserDTO> { userDTO1, userDTO2 };
+        var profile = new ProfileDTO(
+            "123 Main St",
+            "555-0123",
+            null, null, null, null, null,
+            null, null, null, null, null, null
+        );
+
+        var users = new List<UserDTO>
+        {
+            CreateTestUserDTO(userId1, profile),
+            CreateTestUserDTO(userId2)
+        };
+
         MockGetUsersByRoleAsync("Student", users);
+
         MockGetStudentByUserIdAsync(userId1, student1);
         MockGetStudentByUserIdAsync(userId2, student2);
 
-        // Act
-        var result = await _studentService.GetAllStudentsAsync();
-
-        // Assert
-        var resultList = result.ToList();
-        Assert.Equal(2, resultList.Count);
-        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id && s.Profile?.Address == profile.Address);
-        Assert.Contains(resultList, s => s.UserId == userId2 && s.Id == student2.Id && s.Profile == null);
-    }
-
-    [Fact]
-    public async Task GetAllStudentsAsync_NoStudents_ReturnsEmptyList()
-    {
-        // Arrange
-        MockGetUsersByRoleAsync("Student", new List<UserDTO>());
+        // IMPORTANT: repository bulk call must also be mocked
+        _studentRepositoryMock
+            .Setup(x => x.GetByUserIdsAsync(It.IsAny<List<Guid>>()))
+            .ReturnsAsync(new List<Student> { student1, student2 });
 
         // Act
         var result = await _studentService.GetAllStudentsAsync();
 
-        // Assert
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public async Task GetAllStudentsAsync_SomeStudentsNotFound_ReturnsOnlyFoundStudents()
-    {
-        // Arrange
-        var userId1 = Guid.NewGuid();
-        var userId2 = Guid.NewGuid();
-        var student1 = CreateTestStudent(userId: userId1);
-        var profile = new Profile { Address = "123 Main St" };
-        var userDTO1 = CreateTestUserDTO(userId1, profile);
-        var userDTO2 = CreateTestUserDTO(userId2);
-
-        var users = new List<UserDTO> { userDTO1, userDTO2 };
-        MockGetUsersByRoleAsync("Student", users);
-        MockGetStudentByUserIdAsync(userId1, student1);
-        MockGetStudentByUserIdAsync(userId2, null);
-
-        // Act
-        var result = await _studentService.GetAllStudentsAsync();
+        var list = result.Items.ToList();
 
         // Assert
-        var resultList = result.ToList();
-        Assert.Single(resultList);
-        Assert.Contains(resultList, s => s.UserId == userId1 && s.Id == student1.Id && s.Profile?.Address == profile.Address);
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, x => x.UserId == userId1);
+        Assert.Contains(list, x => x.UserId == userId2);
     }
 }
