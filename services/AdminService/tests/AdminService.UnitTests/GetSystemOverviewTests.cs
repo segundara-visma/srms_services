@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Moq;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AdminService.Application.Interfaces;
@@ -7,66 +7,68 @@ using AdminService.Application.Services;
 using AdminService.Application.DTOs;
 using Xunit;
 
-namespace AdminService.UnitTests
+namespace AdminService.UnitTests;
+
+public class GetSystemOverviewTests : BaseTest
 {
-    public class GetSystemOverviewTests : BaseTest
+    private readonly IAdminService _adminService;
+
+    public GetSystemOverviewTests()
     {
-        private readonly IAdminService _adminService;
+        _adminService = new AdminServiceImpl(
+            UserServiceClientMock.Object,
+            TutorServiceClientMock.Object,
+            StudentServiceClientMock.Object,
+            GradeServiceClientMock.Object,
+            CourseServiceClientMock.Object,
+            EnrollmentServiceClientMock.Object);
+    }
 
-        public GetSystemOverviewTests()
+    [Fact]
+    public async Task GetSystemOverviewAsync_WhenDataExists_ReturnsOverview()
+    {
+        var tutors = new List<AdminDTO> { CreateTestAdminDTO(Guid.NewGuid(), null) };
+        var students = new List<AdminDTO> { CreateTestAdminDTO(Guid.NewGuid(), null) };
+
+        var grades = new List<GradeDTO>
         {
-            _adminService = new AdminServiceImpl(
-                UserServiceClientMock.Object,
-                TutorServiceClientMock.Object,
-                StudentServiceClientMock.Object,
-                GradeServiceClientMock.Object,
-                CourseServiceClientMock.Object,
-                EnrollmentServiceClientMock.Object);
-        }
+            new GradeDTO(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                85m,
+                DateTime.UtcNow,
+                "Good"
+            )
+        };
 
-        [Fact]
-        public async Task GetSystemOverviewAsync_WhenDataExists_ReturnsOverview()
-        {
-            var tutors = new List<TutorDTO> { new TutorDTO(Guid.NewGuid(), Guid.NewGuid(), "Tutor", "One", "tutor1@example.com") };
-            var students = new List<AdminDTO> { CreateTestAdminDTO(Guid.NewGuid(), null) }; // Use AdminDTO as per interface
-            var grades = new List<GradeDTO> { new GradeDTO { GradeValue = 85m } };
-            var courses = new List<object> { new { } };
-            var enrollments = new List<object> { new { } };
-            MockGetAllTutorsAsync(tutors);
-            MockGetAllUsersByRoleAsync("Student", students); // Use new mock for non-paginated call
-            MockGetAllGradesAsync(grades);
-            MockGetAllCoursesAsync(courses);
-            MockGetAllEnrollmentsAsync(enrollments);
+        var courses = new List<object> { new { } };
+        var enrollments = new List<object> { new { } };
 
-            var result = await _adminService.GetSystemOverviewAsync();
+        MockGetAllUsersByRoleAsync("Tutor", tutors);
+        MockGetAllUsersByRoleAsync("Student", students);
+        MockGetAllGradesAsync(grades);
+        MockGetAllCoursesAsync(courses);
+        MockGetAllEnrollmentsAsync(enrollments);
 
-            result.Should().BeEquivalentTo(new SystemOverviewDTO(
-                TotalTutors: 1,
-                TotalStudents: 1,
-                TotalGrades: 1,
-                TotalCourses: 1,
-                TotalEnrollments: 1,
-                AverageGrade: 85m));
-        }
+        var result = await _adminService.GetSystemOverviewAsync();
 
-        [Fact]
-        public async Task GetSystemOverviewAsync_WhenNoData_ReturnsZeroValues()
-        {
-            MockGetAllTutorsAsync(new List<TutorDTO>());
-            MockGetAllUsersByRoleAsync("Student", new List<AdminDTO>()); // Use new mock for non-paginated call
-            MockGetAllGradesAsync(new List<GradeDTO>());
-            MockGetAllCoursesAsync(new List<object>());
-            MockGetAllEnrollmentsAsync(new List<object>());
+        result.Should().BeEquivalentTo(new SystemOverviewDTO(
+            1, 1, 1, 1, 1, 85m));
+    }
 
-            var result = await _adminService.GetSystemOverviewAsync();
+    [Fact]
+    public async Task GetSystemOverviewAsync_WhenNoData_ReturnsZeroValues()
+    {
+        MockGetAllUsersByRoleAsync("Tutor", new List<AdminDTO>());
+        MockGetAllUsersByRoleAsync("Student", new List<AdminDTO>());
+        MockGetAllGradesAsync(new List<GradeDTO>());
+        MockGetAllCoursesAsync(new List<object>());
+        MockGetAllEnrollmentsAsync(new List<object>());
 
-            result.Should().BeEquivalentTo(new SystemOverviewDTO(
-                TotalTutors: 0,
-                TotalStudents: 0,
-                TotalGrades: 0,
-                TotalCourses: 0,
-                TotalEnrollments: 0,
-                AverageGrade: 0m));
-        }
+        var result = await _adminService.GetSystemOverviewAsync();
+
+        result.Should().BeEquivalentTo(new SystemOverviewDTO(
+            0, 0, 0, 0, 0, 0m));
     }
 }

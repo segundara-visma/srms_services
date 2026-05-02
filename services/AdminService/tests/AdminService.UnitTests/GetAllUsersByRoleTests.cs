@@ -30,7 +30,18 @@ public class GetAllUsersByRoleTests : BaseTest
     {
         var role = "Tutor";
         var userId = Guid.NewGuid();
-        var admins = new List<AdminDTO> { CreateTestAdminDTO(userId, new Profile { Address = "123 Main St" }) };
+        var admins = new List<AdminDTO>
+        {
+            CreateTestAdminDTO(
+                userId,
+                new ProfileDTO(
+                    "123 Main St",
+                    null, null, null, null,
+                    null, null, null,
+                    null, null, null, null, null
+                )
+            )
+        };
         MockGetUsersByRoleAsync(role, admins, page: 1, pageSize: 10, totalCount: 1);
 
         var result = await _adminService.GetAllUsersByRoleAsync(role);
