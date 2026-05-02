@@ -12,6 +12,14 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET}
       - Redis__ConnectionString=redis:6379
       - Redis__InstanceName=SRMServiceInstance
+      # The following for services aggregation
+      - Services__Enrollment=http://enrollmentservice:5005
+      - Services__Student=http://studentservice:5004
+      - Services__User=http://userservice:5002
+      - Services__Course=http://courseservice:5003
+      - Services__Tutor=http://tutorservice:5008
+      - Services__Grade=http://gradeservice:5006
+      - Services__Report=http://reportservice:5007
     depends_on:
       - redis
       - authservice
@@ -36,6 +44,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance  # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5001
     depends_on:
       - userservice
       - authdb
@@ -53,6 +62,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5002
     networks:
       - backend
     depends_on:
@@ -69,6 +79,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5003
     networks:
       - backend
     depends_on:
@@ -85,6 +96,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5004
     networks:
       - backend
     depends_on:
@@ -101,6 +113,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5005
     networks:
       - backend
     depends_on:
@@ -117,6 +130,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5006
     networks:
       - backend
     depends_on:
@@ -133,6 +147,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5007
     networks:
       - backend
     depends_on:
@@ -149,6 +164,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5008
     networks:
       - backend
     depends_on:
@@ -165,11 +181,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Redis__ConnectionString=redis:6379  # Add Redis connection string environment variable
       - Redis__InstanceName=SRMServiceInstance # Optionally, set instance name
+      - ASPNETCORE_URLS=http://0.0.0.0:5009
     networks:
       - backend
 
   authdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -188,7 +205,7 @@ services:
       timeout: 10s
 
   userdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -207,7 +224,7 @@ services:
       timeout: 10s
 
   coursedb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -226,7 +243,7 @@ services:
       timeout: 10s
 
   studentdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -245,7 +262,7 @@ services:
       timeout: 10s
 
   enrollmentdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -264,7 +281,7 @@ services:
       timeout: 10s
 
   gradedb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -283,7 +300,7 @@ services:
       timeout: 10s
 
   reportdb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
@@ -302,7 +319,7 @@ services:
       timeout: 10s
 
   tutordb:
-    image: postgres:latest  # Use a PostgreSQL version (e.g., 13)
+    image: postgres:17 #latest  # Use a PostgreSQL version (e.g., 13)
     environment:
       - POSTGRES_USER=${POSTGRES_USER}  # Database user
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Database password
