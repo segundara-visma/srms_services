@@ -108,14 +108,14 @@ public class AdminServiceImpl : IAdminService
         );
     }
 
-    public async Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId)
+    public async Task AssignCourseToTutorAsync(Guid userId, Guid courseId)
     {
-        if (tutorId == Guid.Empty)
-            throw new ArgumentException("Tutor ID cannot be empty.", nameof(tutorId));
+        if (userId == Guid.Empty)
+            throw new ArgumentException("Tutor ID cannot be empty.", nameof(userId));
         if (courseId == Guid.Empty)
             throw new ArgumentException("Course ID cannot be empty.", nameof(courseId));
 
-        await _tutorServiceClient.AssignCourseToTutorAsync(tutorId, courseId);
+        await _tutorServiceClient.AssignCourseToTutorAsync(userId, courseId);
     }
 
     public async Task<AdminDTO> GetAdminByIdAsync(Guid userId)

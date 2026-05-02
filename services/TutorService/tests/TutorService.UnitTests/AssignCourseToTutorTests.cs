@@ -25,26 +25,28 @@ public class AssignCourseToTutorTests : BaseTest
     [Fact]
     public async Task AssignCourseToTutorAsync_WhenValid_AddsCourse()
     {
-        var tutorId = Guid.NewGuid();
+        var userId = Guid.NewGuid();           // This is what comes into the method
         var courseId = Guid.NewGuid();
+        var tutor = CreateTestTutor(userId: userId);   // Make sure tutor.Id is different from userId
 
-        var tutor = CreateTestTutor(userId: tutorId);
+        // Mock getting the tutor by UserId
+        MockGetTutorByUserIdAsync(userId, tutor);
 
-        MockGetTutorByUserIdAsync(tutorId, tutor);
-
+        // IMPORTANT: Mock using tutor.Id (the Tutor entity's Id), not userId
         TutorRepositoryMock
-            .Setup(r => r.GetCoursesByTutorIdAsync(tutorId))
+            .Setup(r => r.GetCoursesByTutorIdAsync(tutor.Id))
             .ReturnsAsync(new List<TutorCourse>());
 
         TutorRepositoryMock
             .Setup(r => r.AddTutorCourseAsync(It.IsAny<TutorCourse>()))
             .Returns(Task.CompletedTask);
 
-        await _tutorService.AssignCourseToTutorAsync(tutorId, courseId);
+        await _tutorService.AssignCourseToTutorAsync(userId, courseId);
 
+        // Verify with tutor.Id
         TutorRepositoryMock.Verify(r =>
             r.AddTutorCourseAsync(It.Is<TutorCourse>(tc =>
-                tc.TutorId == tutorId &&
+                tc.TutorId == tutor.Id &&           // Use tutor.Id here
                 tc.CourseId == courseId)),
             Times.Once);
     }

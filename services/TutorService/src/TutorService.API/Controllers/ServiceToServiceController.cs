@@ -60,7 +60,7 @@ public class ServiceToServiceTutorsController : ControllerBase
     /// <summary>
     /// Assigns a course to a specific tutor.
     /// </summary>
-    /// <param name="tutorId">The unique identifier of the tutor to assign the course to.</param>
+    /// <param name="userId">The unique identifier of the tutor to assign the course to.</param>
     /// <param name="courseId">The unique identifier of the course to assign.</param>
     /// <returns>
     /// A 204 No Content response if the assignment is successful, a 400 Bad Request if the tutor is already assigned to the course, or a 404 Not Found if the tutor does not exist.
@@ -68,17 +68,17 @@ public class ServiceToServiceTutorsController : ControllerBase
     /// <response code="204">If the course was successfully assigned to the tutor.</response>
     /// <response code="400">If the tutor is already assigned to the course.</response>
     /// <response code="404">If the tutor with the specified ID is not found.</response>
-    [HttpPost("{tutorId}/courses")]
+    [HttpPost("{userId}/courses")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AssignCourseToTutorAsync(
-        [FromRoute] Guid tutorId,
+        [FromRoute] Guid userId,
         [FromQuery] Guid courseId)
     {
         try
         {
-            await _tutorService.AssignCourseToTutorAsync(tutorId, courseId);
+            await _tutorService.AssignCourseToTutorAsync(userId, courseId);
             return NoContent();
         }
         catch (ArgumentException ex)

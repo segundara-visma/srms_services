@@ -139,15 +139,15 @@ public class TutorServiceImpl : ITutorService
         };
     }
 
-    public async Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId)
+    public async Task AssignCourseToTutorAsync(Guid userId, Guid courseId)
     {
-        var tutor = await _tutorRepository.GetByUserIdAsync(tutorId);
+        var tutor = await _tutorRepository.GetByUserIdAsync(userId);
         if (tutor == null)
-            throw new ArgumentException($"Tutor with ID {tutorId} not found.");
+            throw new ArgumentException($"Tutor with ID {userId} not found.");
 
         var existingCourse = await _tutorRepository.GetCoursesByTutorIdAsync(tutor.Id);
         if (existingCourse.Any(tc => tc.CourseId == courseId))
-            throw new ArgumentException($"Tutor {tutorId} is already assigned to course {courseId}.");
+            throw new ArgumentException($"Tutor {userId} is already assigned to course {courseId}.");
 
         var tutorCourse = new TutorCourse
         {

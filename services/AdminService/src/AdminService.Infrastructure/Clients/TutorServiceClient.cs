@@ -70,10 +70,10 @@ public class TutorServiceClient : ITutorServiceClient
         }
     }
 
-    public async Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId)
+    public async Task AssignCourseToTutorAsync(Guid userId, Guid courseId)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
-        var request = new HttpRequestMessage(HttpMethod.Post, $"api/s2s/tutors/{tutorId}/courses?courseId={courseId}");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"api/s2s/tutors/{userId}/courses?courseId={courseId}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         var response = await _httpClient.SendAsync(request);
         if (!response.IsSuccessStatusCode)
