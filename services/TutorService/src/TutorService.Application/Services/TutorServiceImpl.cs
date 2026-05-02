@@ -1,3 +1,4 @@
+using TutorService.Application.Common;
 using TutorService.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -34,18 +35,10 @@ public class TutorServiceImpl : ITutorService
         if (user == null || user.Role != "Tutor")
             throw new ArgumentException($"User with ID {tutorId} is not a tutor.");
 
-        //return new TutorDTO
-        //{
-        //    Id = tutor.Id,
-        //    UserId = user.Id,
-        //    FirstName = user.FirstName,
-        //    LastName = user.LastName,
-        //    Email = user.Email
-        //};
         return new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile);
     }
 
-    public async Task<TutorDTO> UpdateTutorAsync(Guid tutorId, UpdateRequest request)
+    public async Task<TutorDTO> UpdateTutorAsync(Guid tutorId, UpdateRequestDTO request)
     {
         var tutor = await _tutorRepository.GetByUserIdAsync(tutorId);
         if (tutor == null)
@@ -55,57 +48,65 @@ public class TutorServiceImpl : ITutorService
         if (user == null)
             throw new ArgumentException($"Update request failed.");
 
-        //return new TutorDTO
-        //{
-        //    Id = tutor.Id,
-        //    UserId = user.Id,
-        //    FirstName = user.FirstName,
-        //    LastName = user.LastName,
-        //    Email = user.Email
-        //};
-
-        var profile = new Profile
-        {
-            Address = request.Address,
-            Phone = request.Phone,
-            City = request.City,
-            State = request.State,
-            ZipCode = request.ZipCode,
-            Country = request.Country,
-            Nationality = request.Nationality,
-            Bio = request.Bio,
-            FacebookUrl = request.FacebookUrl,
-            TwitterUrl = request.TwitterUrl,
-            LinkedInUrl = request.LinkedInUrl,
-            InstagramUrl = request.InstagramUrl,
-            WebsiteUrl = request.WebsiteUrl
-        };
+        var profile = new ProfileDTO
+        (
+            request.Address,
+            request.Phone,
+            request.City,
+            request.State,
+            request.ZipCode,
+            request.Country,
+            request.Nationality,
+            request.Bio,
+            request.FacebookUrl,
+            request.TwitterUrl,
+            request.LinkedInUrl,
+            request.InstagramUrl,
+            request.WebsiteUrl
+        );
 
         return new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, profile);
     }
 
-    public async Task<IEnumerable<TutorDTO>> GetAllTutorsAsync()
+    public async Task<PaginatedResponse<TutorDTO>> GetAllTutorsAsync(int page = 1, int pageSize = 10)
     {
-        var users = await _userServiceClient.GetUsersByRoleAsync("Tutor");
-        var tutorDTOs = new List<TutorDTO>();
+        // Step 1: Get paginated users
+        var pagedUsers = await _userServiceClient.GetUsersByRoleAsync("Tutor", page, pageSize);
 
-        foreach (var user in users)
-        {
-            var tutor = await _tutorRepository.GetByUserIdAsync(user.Id);
-            if (tutor != null)
+        var userIds = pagedUsers.Items.Select(u => u.Id).ToList();
+
+        // Step 2: Get tutors in bulk
+        var tutors = await _tutorRepository.GetByUserIdsAsync(userIds);
+
+        var tutorMap = tutors.ToDictionary(s => s.UserId);
+
+        // Step 3: Merge data
+        var tutorDTOs = pagedUsers.Items
+            .Where(u => tutorMap.ContainsKey(u.Id))
+            .Select(u =>
             {
-                tutorDTOs.Add(new TutorDTO(tutor.Id, user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.Profile));
-                //{
-                //    Id = tutor.Id,
-                //    UserId = user.Id,
-                //    FirstName = user.FirstName,
-                //    LastName = user.LastName,
-                //    Email = user.Email
-                //});
-            }
-        }
+                var tutor = tutorMap[u.Id];
 
-        return tutorDTOs;
+                return new TutorDTO(
+                    tutor.Id,
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Role,
+                    u.Profile
+                );
+            })
+            .ToList();
+
+        // Step 4: Return unified pagination
+        return new PaginatedResponse<TutorDTO>
+        {
+            Items = tutorDTOs,
+            TotalCount = pagedUsers.TotalCount,
+            Page = pagedUsers.Page,
+            PageSize = pagedUsers.PageSize
+        };
     }
 
     public async Task<bool> AssignGradeAsync(Guid studentId, Guid courseId, decimal grade)
@@ -116,14 +117,26 @@ public class TutorServiceImpl : ITutorService
         return await _gradeServiceClient.AssignGradeAsync(studentId, courseId, grade);
     }
 
-    public async Task<IEnumerable<Guid>> GetAssignedCoursesAsync(Guid tutorId)
+    public async Task<PaginatedResponse<TutorCoursesDTO>> GetAssignedCoursesAsync(Guid userId, int page = 1, int pageSize = 10)
     {
-        var tutor = await _tutorRepository.GetByUserIdAsync(tutorId);
+        var tutor = await _tutorRepository.GetByUserIdAsync(userId);
         if (tutor == null)
-            throw new ArgumentException($"Tutor with ID {tutorId} not found.");
+            throw new ArgumentException($"Tutor with ID {userId} not found.");
 
-        var courses = await _tutorRepository.GetCoursesByTutorIdAsync(tutorId);
-        return courses.Select(tc => tc.CourseId);
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var paginatedResult = await _tutorRepository.GetPaginatedCoursesByTutorIdAsync(tutor.Id, page, pageSize);
+
+        var items = paginatedResult.Items.Select(tc => new TutorCoursesDTO(tc.Id, tc.TutorId, tc.CourseId));
+
+        return new PaginatedResponse<TutorCoursesDTO>
+        {
+            Items = items,
+            TotalCount = paginatedResult.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task AssignCourseToTutorAsync(Guid tutorId, Guid courseId)
@@ -132,14 +145,14 @@ public class TutorServiceImpl : ITutorService
         if (tutor == null)
             throw new ArgumentException($"Tutor with ID {tutorId} not found.");
 
-        var existingCourse = await _tutorRepository.GetCoursesByTutorIdAsync(tutorId);
+        var existingCourse = await _tutorRepository.GetCoursesByTutorIdAsync(tutor.Id);
         if (existingCourse.Any(tc => tc.CourseId == courseId))
             throw new ArgumentException($"Tutor {tutorId} is already assigned to course {courseId}.");
 
         var tutorCourse = new TutorCourse
         {
             Id = Guid.NewGuid(),
-            TutorId = tutorId,
+            TutorId = tutor.Id,
             CourseId = courseId,
             AssignmentDate = DateTime.UtcNow
         };

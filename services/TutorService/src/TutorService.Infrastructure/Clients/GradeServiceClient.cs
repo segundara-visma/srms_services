@@ -1,5 +1,6 @@
 using TutorService.Application.Interfaces;
 using TutorService.Application.Configuration;
+using TutorService.Application.Common;
 using TutorService.Application.DTOs;
 using System;
 using System.Collections.Generic;

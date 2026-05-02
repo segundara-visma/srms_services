@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TutorService.Application.Interfaces;
+using TutorService.Application.Common;
+using TutorService.Application.DTOs;
 using TutorService.Domain.Entities;
 using TutorService.Infrastructure.Persistence;
 
@@ -50,6 +52,25 @@ namespace TutorService.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<PaginatedResult<TutorCourse>> GetPaginatedCoursesByTutorIdAsync(Guid tutorId, int page, int pageSize)
+        {
+            var query = _context.TutorCourses
+                .Where(tc => tc.TutorId == tutorId);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<TutorCourse>
+            {
+                Items = items,
+                TotalCount = totalCount
+            };
+        }
+
         public async Task<IEnumerable<TutorCourse>> GetCoursesByTutorIdAsync(Guid tutorId)
         {
             return await _context.TutorCourses
@@ -61,6 +82,13 @@ namespace TutorService.Infrastructure.Repositories
         {
             await _context.TutorCourses.AddAsync(tutorCourse);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Tutor>> GetByUserIdsAsync(List<Guid> userIds)
+        {
+            return await _context.Tutors
+                .Where(s => userIds.Contains(s.UserId))
+                .ToListAsync();
         }
     }
 }

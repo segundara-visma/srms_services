@@ -58,21 +58,6 @@ public class ServiceToServiceTutorsController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a list of all tutors in the system.
-    /// </summary>
-    /// <returns>
-    /// An <see cref="IEnumerable{TutorDTO}"/> containing details of all tutors.
-    /// </returns>
-    /// <response code="200">Returns a list of all tutors.</response>
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<TutorDTO>>> GetAllTutorsAsync()
-    {
-        var tutors = await _tutorService.GetAllTutorsAsync();
-        return Ok(tutors);
-    }
-
-    /// <summary>
     /// Assigns a course to a specific tutor.
     /// </summary>
     /// <param name="tutorId">The unique identifier of the tutor to assign the course to.</param>

@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using TutorService.Application.Configuration;
+using TutorService.Application.Common;
 using TutorService.Application.DTOs;
 using Microsoft.Extensions.Options;
 using System;
@@ -70,7 +71,7 @@ public class UserServiceClient : IUserServiceClient
         return null;
     }
 
-    public async Task<UserDTO> UpdateUserAsync(Guid userId, UpdateRequest user)
+    public async Task<UserDTO> UpdateUserAsync(Guid userId, UpdateRequestDTO user)
     {
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
@@ -87,20 +88,26 @@ public class UserServiceClient : IUserServiceClient
         throw new Exception($"Failed to update user: {response.StatusCode}");
     }
 
-    public async Task<IEnumerable<UserDTO>> GetUsersByRoleAsync(string role)
+    public async Task<PaginatedResponse<UserDTO>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
     {
+        if (string.IsNullOrWhiteSpace(role))
+            throw new ArgumentException("Role cannot be empty.", nameof(role));
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
         var accessToken = await GetAuth0OAuth2TokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={role}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"api/s2s/users/by-role?role={Uri.EscapeDataString(role)}&page={page}&pageSize={pageSize}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var response = await _httpClient.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<UserDTO>>();
+            return await response.Content.ReadFromJsonAsync<PaginatedResponse<UserDTO>>() ??
+                new PaginatedResponse<UserDTO> { Items = Enumerable.Empty<UserDTO>(), TotalCount = 0, Page = page, PageSize = pageSize };
         }
 
-        return null;
+        return new PaginatedResponse<UserDTO> { Items = Enumerable.Empty<UserDTO>(), TotalCount = 0, Page = page, PageSize = pageSize };
     }
 }

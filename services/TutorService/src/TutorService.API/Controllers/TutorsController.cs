@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TutorService.Application.Common;
 using TutorService.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Security.Claims; // Added to resolve ClaimTypes
 /// Provides RESTful API endpoints for managing tutor-related operations within the Student Record Management System (SRMS).
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/tutors")]
 public class TutorsController : ControllerBase
 {
     private readonly ITutorService _tutorService;
@@ -60,6 +61,7 @@ public class TutorsController : ControllerBase
     /// <response code="200">Returns the tutor details.</response>
     /// <response code="401">If the request is not authorized.</response>
     [HttpGet("me")]
+    [Authorize(Roles = "Tutor")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetMe()
@@ -87,10 +89,11 @@ public class TutorsController : ControllerBase
     /// <response code="204">Returns No Content response.</response>
     /// <response code="401">If the request is not authorized.</response>
     [HttpPut("me")]
+    [Authorize(Roles = "Tutor")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequest dto)
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateRequestDTO dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
@@ -141,26 +144,55 @@ public class TutorsController : ControllerBase
     /// <summary>
     /// Retrieves a list of course IDs assigned to a specific tutor.
     /// </summary>
-    /// <param name="tutorId">The unique identifier of the tutor whose assigned courses are to be retrieved.</param>
+    /// <param name="userId">The unique identifier of the tutor whose assigned courses are to be retrieved.</param>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
     /// <returns>
-    /// An <see cref="IEnumerable{Guid}"/> containing the IDs of courses assigned to the tutor, or a 404 Not Found response if the tutor does not exist.
+    /// A response containing the paginated list of Assigned courses for the selected tutor.
     /// </returns>
-    /// <response code="200">Returns a list of course IDs.</response>
-    /// <response code="404">If the tutor with the specified ID is not found.</response>
-    [HttpGet("{tutorId}/courses")]
+    /// <response code="200">Returns the paginated list of courses.</response>
+    /// <response code="400">If the request is invalid.</response>
+    [HttpGet("{userId}/courses")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
-    public async Task<ActionResult<IEnumerable<Guid>>> GetAssignedCoursesAsync([FromRoute] Guid tutorId)
+    public async Task<ActionResult<IEnumerable<Guid>>> GetAssignedCoursesAsync([FromRoute] Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         try
         {
-            var courses = await _tutorService.GetAssignedCoursesAsync(tutorId);
+            var courses = await _tutorService.GetAssignedCoursesAsync(userId, page, pageSize);
             return Ok(courses);
         }
         catch (ArgumentException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Retrieves a list of all tutors in the system.
+    /// </summary>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{TutorDTO}"/> containing the paginated list of users.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of users.</response>
+    /// <response code="400">If the request is invalid.</response>
+    [HttpGet]
+    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAllTutorsAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var tutors = await _tutorService.GetAllTutorsAsync(page, pageSize);
+            return Ok(tutors);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }
