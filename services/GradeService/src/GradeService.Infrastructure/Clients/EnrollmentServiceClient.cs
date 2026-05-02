@@ -1,5 +1,6 @@
 using GradeService.Application.Interfaces;
 using GradeService.Application.Configuration;
+using GradeService.Application.Common;
 using GradeService.Application.DTOs;
 using System;
 using System.Collections.Generic;

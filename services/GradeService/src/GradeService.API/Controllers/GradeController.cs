@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GradeService.Application.Interfaces;
+using GradeService.Application.Common;
 using GradeService.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -12,7 +13,7 @@ namespace GradeService.API.Controllers;
 /// Provides endpoints to retrieve, create, and manage grades for students.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/grades")]
 public class GradeController : ControllerBase
 {
     private readonly IGradeService _gradeService;
@@ -53,22 +54,88 @@ public class GradeController : ControllerBase
     /// <response code="409">If the student is not enrolled in the specified course.</response>
     [HttpPost]
     [Authorize(Policy = "TutorOnly")]
-    public async Task<IActionResult> CreateGrade([FromBody] GradeDTO gradeDto)
+    public async Task<IActionResult> CreateGrade([FromBody] CreateGradeDTO gradeDto)
     {
-        if (gradeDto == null) return BadRequest("Grade cannot be null.");
+        if (gradeDto == null)
+            return BadRequest("Grade cannot be null.");
 
         try
         {
-            await _gradeService.AddGradeAsync(gradeDto);
-            return CreatedAtAction(nameof(GetGrade), new { id = gradeDto.Id }, gradeDto);
+            var createdId = await _gradeService.AddGradeAsync(gradeDto);
+
+            return CreatedAtAction(
+                nameof(GetGrade),
+                new { id = createdId },
+                null // or return DTO if you want
+            );
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(ex.Message); // e.g., "Student is not enrolled in the specified course."
+            return Conflict(ex.Message);
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message); // e.g., "Grade value must be between 0 and 100."
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all grades for a specific student.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user (student).</param>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{GradeDTO}"/> containing the paginated list of grades for the selected student.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of grades.</response>
+    /// <response code="400">If the request is invalid.</response>
+    [HttpGet("student/{userId}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetGradesByStudent(
+        Guid userId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var grades = await _gradeService.GetGradesByStudentAsync(userId, page, pageSize);
+            return Ok(grades);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all grades for a specific course.
+    /// </summary>
+    /// <param name="courseId">The unique identifier of the course.</param>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{GradeDTO}"/> containing the paginated list of grades for the selected course.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of grades.</response>
+    /// <response code="400">If the request is invalid.</response>
+    [HttpGet("course/{courseId}")]
+    [Authorize]
+    public async Task<IActionResult> GetGradesByCourse(
+        Guid courseId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var grades = await _gradeService.GetGradesByCourseAsync(courseId, page, pageSize);
+            return Ok(grades);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

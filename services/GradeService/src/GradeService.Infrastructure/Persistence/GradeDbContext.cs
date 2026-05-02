@@ -22,7 +22,7 @@ public class GradeDbContext : DbContext
                 StudentId = new Guid("b1c2d3e4-f5f6-7890-abcd-ef1234567890"),
                 CourseId = new Guid("0365eed4-e67d-460a-abd7-6742b3698d86"),
                 GradeValue = 90.0m,
-                DateGraded = dateGraded,
+                GradedAt = dateGraded,
                 Comments = "Excellent performance"
             }
         );
