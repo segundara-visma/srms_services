@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using EnrollmentService.Application.Configuration;
+using EnrollmentService.Application.Common;
 using EnrollmentService.Application.DTOs;
 using Microsoft.Extensions.Options;
 using System;
@@ -64,7 +65,14 @@ public class UserServiceClient : IUserServiceClient
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<UserDTO>();
+            var user = await response.Content.ReadFromJsonAsync<UserDTO>();
+
+            if (user is null)
+            {
+                return null;
+            }
+
+            return user;
         }
 
         return null;
@@ -81,7 +89,9 @@ public class UserServiceClient : IUserServiceClient
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<IEnumerable<UserDTO>>();
+            var users = await response.Content.ReadFromJsonAsync<IEnumerable<UserDTO>>();
+
+            return users ?? new List<UserDTO>();
         }
 
         return null;

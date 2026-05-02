@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using EnrollmentService.Application.Interfaces;
+using EnrollmentService.Application.Common;
 using EnrollmentService.Application.DTOs;
 using System;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace EnrollmentService.API.Controllers;
 /// <summary>
 /// Controller for managing student enrollments in courses.
 /// </summary>
-[Route("api/[controller]")]
+[Route("api/enrollments")]
 [ApiController]
 public class EnrollmentController : ControllerBase
 {
@@ -43,28 +44,54 @@ public class EnrollmentController : ControllerBase
     /// Retrieves all enrollments for a specific student.
     /// </summary>
     /// <param name="userId">The unique identifier of the user (student).</param>
-    /// <returns>An <see cref="IActionResult"/> containing a list of <see cref="EnrollmentDTO"/> objects representing the student's enrollments.</returns>
-    /// <exception cref="ArgumentException">Thrown when the user is not found or is not a student.</exception>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{EnrollmentDTO}"/> containing the paginated list of enrollments for the selected student.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of courses.</response>
+    /// <response code="400">If the request is invalid.</response>
     [HttpGet("student/{userId}")]
-    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
-    public async Task<IActionResult> GetEnrollmentsByStudent(Guid userId)
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetEnrollmentsByStudent(Guid userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var enrollments = await _enrollmentService.GetEnrollmentsByStudentAsync(userId);
-        return Ok(enrollments);
+        try
+        {
+            var enrollments = await _enrollmentService.GetEnrollmentsByStudentAsync(userId, page, pageSize);
+            return Ok(enrollments);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
     /// Retrieves all enrollments for a specific course.
     /// </summary>
     /// <param name="courseId">The unique identifier of the course.</param>
-    /// <returns>An <see cref="IActionResult"/> containing a list of <see cref="EnrollmentDTO"/> objects representing the enrollments in the course.</returns>
-    /// <exception cref="ArgumentException">Thrown when the course is not found.</exception>
+    /// <param name="page">The page number (default: 1).</param>
+    /// <param name="pageSize">The number of items per page (default: 10).</param>
+    /// <returns>
+    /// A <see cref="PaginatedResponse{EnrollmentDTO}"/> containing the paginated list of enrollments for the selected course.
+    /// </returns>
+    /// <response code="200">Returns the paginated list of courses.</response>
+    /// <response code="400">If the request is invalid.</response>
     [HttpGet("course/{courseId}")]
-    [Authorize(Policy = "AdminOrTutor")] // Either Admin or Tutor can access
-    public async Task<IActionResult> GetEnrollmentsByCourse(Guid courseId)
+    [Authorize]
+    public async Task<IActionResult> GetEnrollmentsByCourse(Guid courseId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var enrollments = await _enrollmentService.GetEnrollmentsByCourseAsync(courseId);
-        return Ok(enrollments);
+        try
+        {
+            var enrollments = await _enrollmentService.GetEnrollmentsByCourseAsync(courseId, page, pageSize);
+            return Ok(enrollments);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

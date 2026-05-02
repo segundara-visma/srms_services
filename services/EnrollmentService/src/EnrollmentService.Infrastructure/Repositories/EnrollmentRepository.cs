@@ -1,4 +1,5 @@
 using EnrollmentService.Application.Interfaces;
+using EnrollmentService.Application.Common;
 using EnrollmentService.Domain.Entities;
 using EnrollmentService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -17,19 +18,47 @@ public class EnrollmentRepository : IEnrollmentRepository
         _context = context;
     }
 
-    public async Task<Enrollment> GetByIdAsync(Guid id)
+    public async Task<Enrollment?> GetByIdAsync(Guid id)
     {
         return await _context.Enrollments.FindAsync(id);
     }
 
-    public async Task<IEnumerable<Enrollment>> GetByStudentIdAsync(Guid userId)
+    //public async Task<IEnumerable<Enrollment>> GetByStudentIdAsync(Guid userId)
+    //{
+    //    return await _context.Enrollments.Where(e => e.StudentId == userId).ToListAsync();
+    //}
+
+    public async Task<PaginatedResult<Enrollment>> GetByStudentIdAsync(Guid userId, int page = 1, int pageSize = 10)
     {
-        return await _context.Enrollments.Where(e => e.StudentId == userId).ToListAsync();
+        var query = _context.Enrollments.Where(e => e.StudentId == userId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<Enrollment> { Items = items, TotalCount = totalCount };
     }
 
-    public async Task<IEnumerable<Enrollment>> GetByCourseIdAsync(Guid courseId)
+    //public async Task<IEnumerable<Enrollment>> GetByCourseIdAsync(Guid courseId)
+    //{
+    //    return await _context.Enrollments.Where(e => e.CourseId == courseId).ToListAsync();
+    //}
+
+    public async Task<PaginatedResult<Enrollment>> GetByCourseIdAsync(Guid courseId, int page = 1, int pageSize = 10)
     {
-        return await _context.Enrollments.Where(e => e.CourseId == courseId).ToListAsync();
+        var query = _context.Enrollments.Where(e => e.CourseId == courseId);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResult<Enrollment> { Items = items, TotalCount = totalCount };
     }
 
     public async Task<Enrollment?> GetByStudentAndCourseAsync(Guid studentId, Guid courseId)

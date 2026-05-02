@@ -1,4 +1,5 @@
 using EnrollmentService.Application.Interfaces;
+using EnrollmentService.Application.Common;
 using EnrollmentService.Application.DTOs;
 using EnrollmentService.Domain.Entities;
 using System;
@@ -26,52 +27,98 @@ public class EnrollmentServiceImpl : IEnrollmentService
         if (enrollment == null)
             throw new ArgumentException($"Enrollment with ID {enrollmentId} not found.");
 
-        return new EnrollmentDTO
-        {
-            Id = enrollment.Id,
-            StudentId = enrollment.StudentId,
-            CourseId = enrollment.CourseId,
-            EnrollmentDate = enrollment.EnrollmentDate,
-            Status = enrollment.Status.ToString(), // Convert enum to string for DTO
-            PaymentAmount = enrollment.PaymentAmount
-        };
+        return new EnrollmentDTO(enrollment.Id, enrollment.StudentId, enrollment.CourseId, enrollment.EnrollmentDate, enrollment.Status.ToString(), enrollment.PaymentAmount);
+
+        //return new EnrollmentDTO
+        //{
+        //    Id = enrollment.Id,
+        //    StudentId = enrollment.StudentId,
+        //    CourseId = enrollment.CourseId,
+        //    EnrollmentDate = enrollment.EnrollmentDate,
+        //    Status = enrollment.Status.ToString(), // Convert enum to string for DTO
+        //    PaymentAmount = enrollment.PaymentAmount
+        //};
     }
 
-    public async Task<IEnumerable<EnrollmentDTO>> GetEnrollmentsByStudentAsync(Guid userId)
+    public async Task<PaginatedResponse<EnrollmentDTO>> GetEnrollmentsByStudentAsync(Guid userId, int page = 1, int pageSize = 10)
     {
         var user = await _userServiceClient.GetUserByIdAsync(userId);
         if (user == null || user.Role != "Student")
             throw new ArgumentException($"User with ID {userId} is not a student.");
 
-        var enrollments = await _enrollmentRepository.GetByStudentIdAsync(userId);
-        return enrollments.Select(e => new EnrollmentDTO
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var paginatedResult = await _enrollmentRepository.GetByStudentIdAsync(userId, page, pageSize);
+
+        var items = paginatedResult.Items.Select(e => new EnrollmentDTO(e.Id, e.StudentId, e.CourseId, e.EnrollmentDate, e.Status.ToString(), e.PaymentAmount));
+
+        return new PaginatedResponse<EnrollmentDTO>
         {
-            Id = e.Id,
-            StudentId = e.StudentId,
-            CourseId = e.CourseId,
-            EnrollmentDate = e.EnrollmentDate,
-            Status = e.Status.ToString(),
-            PaymentAmount = e.PaymentAmount
-        });
+            Items = items,
+            TotalCount = paginatedResult.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
-    public async Task<IEnumerable<EnrollmentDTO>> GetEnrollmentsByCourseAsync(Guid courseId)
+    //public async Task<IEnumerable<EnrollmentDTO>> GetEnrollmentsByStudentAsync(Guid userId)
+    //{
+    //    var user = await _userServiceClient.GetUserByIdAsync(userId);
+    //    if (user == null || user.Role != "Student")
+    //        throw new ArgumentException($"User with ID {userId} is not a student.");
+
+    //    var enrollments = await _enrollmentRepository.GetByStudentIdAsync(userId);
+    //    return enrollments.Select(e => new EnrollmentDTO
+    //    (
+    //        e.Id, 
+    //        e.StudentId, 
+    //        e.CourseId, 
+    //        e.EnrollmentDate, 
+    //        e.Status.ToString(), 
+    //        e.PaymentAmount
+    //    ));
+    //}
+
+    public async Task<PaginatedResponse<EnrollmentDTO>> GetEnrollmentsByCourseAsync(Guid courseId, int page = 1, int pageSize = 10)
     {
         var course = await _courseServiceClient.GetCourseByIdAsync(courseId);
         if (course == null)
             throw new ArgumentException($"Course with ID {courseId} not found.");
 
-        var enrollments = await _enrollmentRepository.GetByCourseIdAsync(courseId);
-        return enrollments.Select(e => new EnrollmentDTO
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+
+        var paginatedResult = await _enrollmentRepository.GetByCourseIdAsync(courseId, page, pageSize);
+
+        var items = paginatedResult.Items.Select(e => new EnrollmentDTO(e.Id, e.StudentId, e.CourseId, e.EnrollmentDate, e.Status.ToString(), e.PaymentAmount));
+
+        return new PaginatedResponse<EnrollmentDTO>
         {
-            Id = e.Id,
-            StudentId = e.StudentId,
-            CourseId = e.CourseId,
-            EnrollmentDate = e.EnrollmentDate,
-            Status = e.Status.ToString(), // Convert enum to string for DTO
-            PaymentAmount = e.PaymentAmount
-        });
+            Items = items,
+            TotalCount = paginatedResult.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
+
+    //public async Task<IEnumerable<EnrollmentDTO>> GetEnrollmentsByCourseAsync(Guid courseId)
+    //{
+    //    var course = await _courseServiceClient.GetCourseByIdAsync(courseId);
+    //    if (course == null)
+    //        throw new ArgumentException($"Course with ID {courseId} not found.");
+
+    //    var enrollments = await _enrollmentRepository.GetByCourseIdAsync(courseId);
+    //    return enrollments.Select(e => new EnrollmentDTO
+    //    (
+    //        e.Id,
+    //        e.StudentId,
+    //        e.CourseId,
+    //        e.EnrollmentDate,
+    //        e.Status.ToString(),
+    //        e.PaymentAmount
+    //    ));
+    //}
 
     public async Task EnrollStudentAsync(Guid studentId, Guid courseId)
     {
@@ -127,13 +174,14 @@ public class EnrollmentServiceImpl : IEnrollmentService
 
     private EnrollmentDTO MapToDTO(Enrollment enrollment)
     {
-        return new EnrollmentDTO
-        {
-            Id = enrollment.Id,
-            StudentId = enrollment.StudentId,
-            CourseId = enrollment.CourseId,
-            EnrollmentDate = enrollment.EnrollmentDate,
-            Status = enrollment.Status.ToString()
-        };
+        return new EnrollmentDTO(enrollment.Id, enrollment.StudentId, enrollment.CourseId, enrollment.EnrollmentDate, enrollment.Status.ToString(), enrollment.PaymentAmount);
+        //return new EnrollmentDTO
+        //{
+        //    Id = enrollment.Id,
+        //    StudentId = enrollment.StudentId,
+        //    CourseId = enrollment.CourseId,
+        //    EnrollmentDate = enrollment.EnrollmentDate,
+        //    Status = enrollment.Status.ToString()
+        //};
     }
 }

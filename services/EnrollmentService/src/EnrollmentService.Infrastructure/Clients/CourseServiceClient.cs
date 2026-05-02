@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using EnrollmentService.Application.Configuration;
+using EnrollmentService.Application.Common;
 using EnrollmentService.Application.DTOs;
 using Microsoft.Extensions.Options;
 using System;
@@ -45,7 +46,18 @@ public class CourseServiceClient : ICourseServiceClient
 
         if (tokenResponse.IsSuccessStatusCode)
         {
-            var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await tokenResponse.Content.ReadAsStringAsync());
+            //var tokenData = JsonConvert.DeserializeObject<TokenResponse>(await tokenResponse.Content.ReadAsStringAsync());
+            //return tokenData.AccessToken;
+
+            var json = await tokenResponse.Content.ReadAsStringAsync();
+
+            var tokenData = JsonConvert.DeserializeObject<TokenResponse>(json);
+
+            if (tokenData is null || string.IsNullOrWhiteSpace(tokenData.AccessToken))
+            {
+                throw new Exception("Invalid token response from Auth0.");
+            }
+
             return tokenData.AccessToken;
         }
 
