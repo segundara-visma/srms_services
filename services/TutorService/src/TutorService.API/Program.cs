@@ -140,9 +140,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.SetIsOriginAllowed(_ => true)   // Replaces AllowAnyOrigin()
+      .AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowCredentials();
     });
 });
 
