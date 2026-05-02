@@ -1,8 +1,7 @@
-using CourseService.Application.DTOs;
 using CourseService.Domain.Entities;
 using Moq;
 using Xunit;
-using System.Threading.Tasks;
+using System;
 
 namespace CourseService.UnitTests;
 
@@ -20,7 +19,7 @@ public class GetCourseTests : BaseTest
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(course.Id, result.Id);
+        Assert.Equal(course.Id, result!.Id);
         Assert.Equal(course.Name, result.Name);
         Assert.Equal(course.Code, result.Code);
         Assert.Equal(course.MaxStudents, result.MaxStudents);
@@ -30,11 +29,14 @@ public class GetCourseTests : BaseTest
     public async Task GetCourseById_NonExistingId_ReturnsNull()
     {
         // Arrange
-        var nonExistingId = Guid.NewGuid();
-        _courseRepositoryMock.Setup(repo => repo.GetByIdAsync(nonExistingId)).ReturnsAsync((Course)null);
+        var id = Guid.NewGuid();
+
+        _courseRepositoryMock
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync((Course?)null);
 
         // Act
-        var result = await _courseService.GetCourseByIdAsync(nonExistingId);
+        var result = await _courseService.GetCourseByIdAsync(id);
 
         // Assert
         Assert.Null(result);

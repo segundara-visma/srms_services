@@ -14,7 +14,7 @@ public abstract class BaseTest
     protected readonly Mock<ICourseRepository> _courseRepositoryMock;
     protected readonly ICourseService _courseService;
 
-    public BaseTest()
+    protected BaseTest()
     {
         _courseRepositoryMock = new Mock<ICourseRepository>();
         _courseService = new CourseServiceImpl(_courseRepositoryMock.Object);
@@ -58,23 +58,42 @@ public abstract class BaseTest
         );
     }
 
+    // -----------------------------
+    // FIXED MOCK HELPERS (NULLABLE SAFE)
+    // -----------------------------
+
     protected void MockGetByIdAsync(Course course)
     {
-        _courseRepositoryMock.Setup(repo => repo.GetByIdAsync(course.Id)).ReturnsAsync(course);
+        _courseRepositoryMock
+            .Setup(r => r.GetByIdAsync(course.Id))
+            .ReturnsAsync(course); // Course -> Course? OK
+    }
+
+    protected void MockGetByIdAsyncNull(Guid id)
+    {
+        _courseRepositoryMock
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync((Course?)null);
     }
 
     protected void MockAddCourseAsync()
     {
-        _courseRepositoryMock.Setup(repo => repo.AddAsync(It.IsAny<Course>())).Returns(Task.CompletedTask);
+        _courseRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<Course>()))
+            .Returns(Task.CompletedTask);
     }
 
     protected void MockUpdateCourseAsync()
     {
-        _courseRepositoryMock.Setup(repo => repo.UpdateAsync(It.IsAny<Course>())).Returns(Task.CompletedTask);
+        _courseRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Course>()))
+            .Returns(Task.CompletedTask);
     }
 
     protected void MockGetAllCoursesAsync(IEnumerable<Course> courses)
     {
-        _courseRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(courses);
+        _courseRepositoryMock
+            .Setup(r => r.GetAllAsync())
+            .ReturnsAsync(courses);
     }
 }

@@ -1,8 +1,7 @@
-using CourseService.Application.DTOs;
 using CourseService.Domain.Entities;
 using Moq;
 using Xunit;
-using System.Threading.Tasks;
+using System;
 
 namespace CourseService.UnitTests;
 
@@ -27,18 +26,23 @@ public class UpdateCourseTests : BaseTest
                  c.Name == dto.Name &&
                  c.Code == dto.Code &&
                  c.MaxStudents == dto.MaxStudents)),
-            Times.Once());
+            Times.Once);
     }
 
     [Fact]
     public async Task UpdateCourse_NonExistingId_ThrowsException()
     {
         // Arrange
-        var nonExistingId = Guid.NewGuid();
-        _courseRepositoryMock.Setup(repo => repo.GetByIdAsync(nonExistingId)).ReturnsAsync((Course)null);
+        var id = Guid.NewGuid();
+
+        _courseRepositoryMock
+            .Setup(r => r.GetByIdAsync(id))
+            .ReturnsAsync((Course?)null);
+
         var dto = CreateTestUpdateCourseDTO();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _courseService.UpdateCourseAsync(nonExistingId, dto));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _courseService.UpdateCourseAsync(id, dto));
     }
 }
