@@ -69,15 +69,15 @@ public class EnrollmentAggregationController : ControllerBase
     /// <summary>
     /// Retrieves all enrollments for a specific student.
     /// </summary>
-    /// <param name="studentId">The unique identifier of the student.</param>
+    /// <param name="userId">The unique identifier of the student.</param>
     /// <returns>
     /// A list of aggregated enrollment records for the specified student.
     /// </returns>
     /// <response code="200">Returns the list of enrollments.</response>
     /// <response code="400">Invalid student ID.</response>
-    [HttpGet("student/{studentId:guid}")]
+    [HttpGet("student/{userId:guid}")]
     public async Task<IActionResult> GetByStudentId(
-        Guid studentId,
+        Guid userId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -86,7 +86,7 @@ public class EnrollmentAggregationController : ControllerBase
             return Unauthorized("No token provided.");
 
         var result = await _aggregationService
-            .GetByStudentIdAsync(studentId, token, page, pageSize);
+            .GetByStudentIdAsync(userId, token, page, pageSize);
 
         return Ok(result);
     }

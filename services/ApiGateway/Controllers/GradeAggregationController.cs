@@ -69,15 +69,15 @@ public class GradeAggregationController : ControllerBase
     /// <summary>
     /// Retrieves all grades for a specific student.
     /// </summary>
-    /// <param name="studentId">The unique identifier of the student.</param>
+    /// <param name="userId">The unique identifier of the student.</param>
     /// <returns>
     /// A list of aggregated grade records for the specified student.
     /// </returns>
     /// <response code="200">Returns the list of grades.</response>
     /// <response code="400">Invalid student ID.</response>
-    [HttpGet("student/{studentId:guid}")]
+    [HttpGet("student/{userId:guid}")]
     public async Task<IActionResult> GetByStudentId(
-        Guid studentId,
+        Guid userId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
@@ -86,7 +86,7 @@ public class GradeAggregationController : ControllerBase
             return Unauthorized("No token provided.");
 
         var result = await _aggregationService
-            .GetByStudentIdAsync(studentId, token, page, pageSize);
+            .GetByStudentIdAsync(userId, token, page, pageSize);
 
         return Ok(result);
     }

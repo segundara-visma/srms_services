@@ -44,10 +44,10 @@ public class GradeAggregationService
     /// Retrieves grades for a specific student with full aggregated details.
     /// </summary>
     public async Task<PaginatedResponse<GradeFullDTO>> GetByStudentIdAsync(
-        Guid studentId, string token, int page, int pageSize)
+        Guid userId, string token, int page, int pageSize)
     {
         var grades = await FetchGradesAsync(
-            $"{_gradeUrl}/api/grades/student/{studentId}?page={page}&pageSize={pageSize}",
+            $"{_gradeUrl}/api/grades/student/{userId}?page={page}&pageSize={pageSize}",
             token);
 
         return await BuildFullResponse(grades, token);

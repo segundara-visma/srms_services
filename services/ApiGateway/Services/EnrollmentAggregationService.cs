@@ -45,10 +45,10 @@ public class EnrollmentAggregationService
     /// Retrieves enrollments for a specific student with full aggregated details.
     /// </summary>
     public async Task<PaginatedResponse<EnrollmentFullDTO>> GetByStudentIdAsync(
-        Guid studentId, string token, int page, int pageSize)
+        Guid userId, string token, int page, int pageSize)
     {
         var enrollments = await FetchEnrollmentsAsync(
-            $"{_enrollmentUrl}/api/enrollments/student/{studentId}?page={page}&pageSize={pageSize}",
+            $"{_enrollmentUrl}/api/enrollments/student/{userId}?page={page}&pageSize={pageSize}",
             token);
 
         return await BuildFullResponse(enrollments, token);
