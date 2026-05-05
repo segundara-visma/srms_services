@@ -1,4 +1,5 @@
 using UserService.Application.Interfaces;
+using UserService.Application.Exceptions;
 using UserService.Domain.Entities;
 using System.Threading.Tasks;
 using BCrypt.Net;
@@ -23,7 +24,9 @@ public class UserServices : IUserService
     public async Task<UserResponseDTO?> GetByIdAsync(Guid id)
     {
         var user = await _userRepository.GetByIdAsync(id);
-        if (user == null) return null;
+
+        if (user == null)
+            throw new ApiException("User not found", 404);
 
         return UserMapper.ToDto(user);
     }
@@ -32,7 +35,7 @@ public class UserServices : IUserService
     {
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null)
-            throw new Exception("User not found");
+            throw new ApiException("User not found", 404);
 
         user.Firstname = request.Firstname ?? user.Firstname;
         user.Lastname = request.Lastname ?? user.Lastname;
@@ -60,9 +63,14 @@ public class UserServices : IUserService
         return UserMapper.ToDto(user);
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
+    public async Task<UserResponseDTO?> GetByEmailAsync(string email)
     {
-        return await _userRepository.GetByEmailAsync(email);
+        var user = await _userRepository.GetByEmailAsync(email);
+
+        if (user == null)
+            throw new ApiException("User not found", 404);
+
+        return UserMapper.ToDto(user);
     }
 
     public async Task<bool> ValidatePasswordAsync(Guid id, string password)
@@ -78,7 +86,7 @@ public class UserServices : IUserService
         var existingUser = await _userRepository.GetByEmailAsync(user.Email);
         if (existingUser != null)
         {
-            throw new InvalidOperationException("Email already exists.");
+            throw new ApiException("Email already exists.", 400);
         }
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword);
@@ -86,7 +94,7 @@ public class UserServices : IUserService
         var role = await _userRepository.GetRoleByNameAsync(roleName);
         if (role == null)
         {
-            throw new InvalidOperationException("Invalid role.");
+            throw new ApiException("Invalid role.", 400);
         }
 
         user.RoleId = role.Id;
@@ -96,9 +104,13 @@ public class UserServices : IUserService
 
     public async Task<IEnumerable<UserResponseDTO>> GetUsersByRoleAsync(string role)
     {
+        if (string.IsNullOrWhiteSpace(role))
+            throw new ApiException("Role cannot be empty.", 400);
+
         var roleEntity = await _userRepository.GetRoleByNameAsync(role);
+
         if (roleEntity == null)
-            return Enumerable.Empty<UserResponseDTO>();
+            throw new ApiException("Role not found.", 404);
 
         var users = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id);
 
@@ -108,19 +120,11 @@ public class UserServices : IUserService
     public async Task<PaginatedResponse<UserResponseDTO>> GetUsersByRoleAsync(string role, int page = 1, int pageSize = 10)
     {
         if (string.IsNullOrWhiteSpace(role))
-            throw new ArgumentException("Role cannot be empty.", nameof(role));
+            throw new ApiException("Role cannot be empty.", 400);
 
         var roleEntity = await _userRepository.GetRoleByNameAsync(role);
         if (roleEntity == null)
-        {
-            return new PaginatedResponse<UserResponseDTO>
-            {
-                Items = Enumerable.Empty<UserResponseDTO>(),
-                TotalCount = 0,
-                Page = page,
-                PageSize = pageSize
-            };
-        }
+            throw new ApiException("Role not found.", 404);
 
         var result = await _userRepository.GetUsersByRoleIdAsync(roleEntity.Id, page, pageSize);
 

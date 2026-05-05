@@ -4,6 +4,7 @@ using UserService.Domain.Entities;
 using UserService.Application.Common;
 using UserService.Application.DTOs;
 using UserService.Application.Mappers;
+using UserService.Application.Exceptions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
@@ -39,9 +40,6 @@ public class UsersController : ControllerBase
     {
         var user = await _userService.GetByIdAsync(id);
 
-        if (user == null)
-            return NotFound();
-
         return Ok(user);
     }
 
@@ -56,7 +54,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequestDTO request)
     {
         if (id != request.Id)
-            return BadRequest("User ID mismatch");
+            throw new ApiException("User ID mismatch", 400);
 
         var response = await _userService.UpdateAsync(id, request);
 
@@ -70,7 +68,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetUsersByIds([FromQuery] List<Guid> ids)
     {
         if (ids == null || !ids.Any())
-            return BadRequest("Ids are required");
+            throw new ApiException("Ids are required", 400);
 
         var users = await _userService.GetByIdsAsync(ids);
 

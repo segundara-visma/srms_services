@@ -3,6 +3,7 @@ using UserService.Application.Interfaces;
 using UserService.Application.Common;
 using UserService.Application.DTOs;
 using UserService.Application.Mappers;
+using UserService.Application.Exceptions;
 using UserService.Domain.Entities;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -37,19 +38,9 @@ public class ServiceToServiceController : ControllerBase
     [HttpGet("by-email/{email}")]
     public async Task<IActionResult> GetUserByEmail(string email)
     {
-        try
-        {
-            var user = await _userService.GetByEmailAsync(email);
+        var user = await _userService.GetByEmailAsync(email);
 
-            if (user == null)
-                return NotFound();
-
-            return Ok(UserMapper.ToDto(user));
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, "Internal Server Error");
-        }
+        return Ok(user);
     }
 
     /// <summary>
@@ -81,9 +72,6 @@ public class ServiceToServiceController : ControllerBase
     {
         var user = await _userService.GetByIdAsync(userid);
 
-        if (user == null)
-            return NotFound();
-
         return Ok(user);
     }
 
@@ -96,9 +84,7 @@ public class ServiceToServiceController : ControllerBase
     public async Task<IActionResult> GetUsersByRole([FromQuery] string role)
     {
         if (string.IsNullOrWhiteSpace(role))
-        {
-            return BadRequest("Role parameter is required.");
-        }
+            throw new ApiException("Role is required", 400);
 
         var users = await _userService.GetUsersByRoleAsync(role);
         return Ok(users);
@@ -118,17 +104,13 @@ public class ServiceToServiceController : ControllerBase
     [HttpGet("by-role")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PaginatedResponse<UserResponseDTO>>> GetUsersByRole([FromQuery] string role, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<PaginatedResponse<UserResponseDTO>>> GetUsersByRole(
+        [FromQuery] string role,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        try
-        {
-            var users = await _userService.GetUsersByRoleAsync(role, page, pageSize);
-            return Ok(users);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var users = await _userService.GetUsersByRoleAsync(role, page, pageSize);
+        return Ok(users);
     }
 
     /// <summary>
@@ -172,9 +154,7 @@ public class ServiceToServiceController : ControllerBase
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateRequestDTO request)
     {
         if (id != request.Id)
-        {
-            return BadRequest("User ID mismatch");
-        }
+            throw new ApiException("User ID mismatch", 400);
 
         var response = await _userService.UpdateAsync(id, request);
 

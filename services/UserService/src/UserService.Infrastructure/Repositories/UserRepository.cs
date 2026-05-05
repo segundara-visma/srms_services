@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UserService.Application.Interfaces;
 using UserService.Application.Common;
 using UserService.Application.DTOs;
+using UserService.Application.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace UserService.Infrastructure.Repositories;
@@ -50,7 +51,8 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync(u => u.Id == user.Id);
 
         if (existingUser == null)
-            throw new Exception("User not found.");
+            throw new ApiException("User not found", 404);
+        //throw new Exception("User not found.");
 
         existingUser.Email = user.Email ?? existingUser.Email;
         existingUser.Firstname = user.Firstname ?? existingUser.Firstname;

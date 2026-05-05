@@ -7,6 +7,7 @@ using System.Text;  // Add this namespace for Encoding
 using UserService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.IdentityModel.Tokens.Jwt;
+using UserService.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -199,6 +200,9 @@ builder.Services.AddScoped<IUserService, UserServices>();
 builder.Services.AddScoped<TokenValidationService>();  // Ensure TokenValidationService is registered
 
 var app = builder.Build();
+
+// Exception middleware
+app.UseCustomExceptionMiddleware();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

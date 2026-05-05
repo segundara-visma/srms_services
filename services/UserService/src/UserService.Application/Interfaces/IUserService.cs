@@ -10,7 +10,7 @@ namespace UserService.Application.Interfaces;
 public interface IUserService
 {
     Task<UserResponseDTO?> GetByIdAsync(Guid id);
-    Task<User?> GetByEmailAsync(string email);
+    Task<UserResponseDTO?> GetByEmailAsync(string email);
     Task RegisterUser(User user, string password, string role);  // This method handles the business logic for user registration
     Task<bool> ValidatePasswordAsync(Guid userId, string password);
     Task<UserResponseDTO?> UpdateAsync(Guid id, UpdateRequestDTO user);  // Update existing user
