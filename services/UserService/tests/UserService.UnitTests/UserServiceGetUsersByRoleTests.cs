@@ -4,6 +4,7 @@ using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UserService.Domain.Entities;
+using UserService.Application.Exceptions;
 
 namespace UserService.UnitTests
 {
@@ -33,9 +34,12 @@ namespace UserService.UnitTests
         {
             MockGetRoleByNameAsync(null);
 
-            var result = await _userService.GetUsersByRoleAsync("Invalid");
+            var act = async () => await _userService.GetUsersByRoleAsync("Invalid");
 
-            result.Should().BeEmpty();
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(404);
+            exception.Message.Should().Be("Role not found.");
         }
 
         [Fact]
@@ -56,6 +60,29 @@ namespace UserService.UnitTests
             result.Items.Should().HaveCount(2);
             result.TotalCount.Should().Be(4);
             result.Page.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task Should_Throw_When_Role_Is_Empty()
+        {
+            var act = async () => await _userService.GetUsersByRoleAsync("");
+
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(400);
+            exception.Message.Should().Be("Role cannot be empty.");
+        }
+
+        [Fact]
+        public async Task Should_Throw_When_Role_Not_Found_Paginated()
+        {
+            MockGetRoleByNameAsync(null);
+
+            var act = async () => await _userService.GetUsersByRoleAsync("Invalid", 1, 10);
+
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(404);
         }
     }
 }

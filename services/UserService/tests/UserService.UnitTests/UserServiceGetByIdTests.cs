@@ -3,6 +3,7 @@ using FluentAssertions;
 using Xunit;
 using System.Threading.Tasks;
 using System;
+using UserService.Application.Exceptions;
 
 namespace UserService.UnitTests
 {
@@ -28,9 +29,12 @@ namespace UserService.UnitTests
         {
             MockGetByIdAsync(null);
 
-            var result = await _userService.GetByIdAsync(Guid.NewGuid());
+            var act = async () => await _userService.GetByIdAsync(Guid.NewGuid());
 
-            result.Should().BeNull();
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(404);
+            exception.Message.Should().Be("User not found");
         }
     }
 }

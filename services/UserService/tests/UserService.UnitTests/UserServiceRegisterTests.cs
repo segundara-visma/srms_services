@@ -3,6 +3,7 @@ using FluentAssertions;
 using Xunit;
 using System.Threading.Tasks;
 using UserService.Domain.Entities;
+using UserService.Application.Exceptions;
 
 namespace UserService.UnitTests
 {
@@ -30,8 +31,30 @@ namespace UserService.UnitTests
 
             MockGetByEmailAsync(user);
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                _userService.RegisterUser(user, "password", "Student"));
+            var act = async () =>
+                await _userService.RegisterUser(user, "password", "Student");
+
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(400);
+            exception.Message.Should().Be("Email already exists.");
+        }
+
+        [Fact]
+        public async Task Should_Throw_When_Role_Is_Invalid()
+        {
+            var user = CreateTestUser();
+
+            MockGetByEmailAsync(null);
+            MockGetRoleByNameAsync(null);
+
+            var act = async () =>
+                await _userService.RegisterUser(user, "password", "Invalid");
+
+            var exception = await Assert.ThrowsAsync<ApiException>(act);
+
+            exception.StatusCode.Should().Be(400);
+            exception.Message.Should().Be("Invalid role.");
         }
     }
 }
